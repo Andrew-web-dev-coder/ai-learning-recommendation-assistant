@@ -1,121 +1,152 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import {
+  initialProgress,
+  recommendNextStep,
+  topics,
+  type KnowledgeLevel,
+  type LearningProgress,
+  type TopicId,
+} from './data/learning'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [goal, setGoal] = useState<TopicId>('dom')
+  const [progress, setProgress] =
+    useState<LearningProgress>(initialProgress)
+
+  const [recommendation, setRecommendation] =
+    useState<ReturnType<typeof recommendNextStep> | null>(null)
+
+  const [feedback, setFeedback] = useState('')
+
+  function updateProgress(
+    topicId: TopicId,
+    level: KnowledgeLevel,
+  ) {
+    setProgress((current) => ({
+      ...current,
+      [topicId]: level,
+    }))
+    setRecommendation(null)
+    setFeedback('')
+  }
+
+  function generateRecommendation() {
+    setRecommendation(recommendNextStep(goal, progress))
+    setFeedback('')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <main className="app">
+      <header className="header">
+        <span className="eyebrow">EHU AI-NATIVE PRACTICE</span>
+        <h1>Learning Path Assistant</h1>
+        <p>
+          Discover your next learning step based on your goals
+          and current knowledge.
+        </p>
+      </header>
+
+      <section className="panel">
+        <h2>1. Choose your learning goal</h2>
+
+        <select
+          value={goal}
+          onChange={(event) => {
+            setGoal(event.target.value as TopicId)
+            setRecommendation(null)
+            setFeedback('')
+          }}
         >
-          Count is {count}
+          {topics.map((topic) => (
+            <option key={topic.id} value={topic.id}>
+              {topic.title}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      <section className="panel">
+        <h2>2. Assess your current knowledge</h2>
+        <p className="hint">
+          Select your current level for each topic.
+        </p>
+
+        <div className="topic-list">
+          {topics.map((topic) => (
+            <div className="topic-row" key={topic.id}>
+              <div>
+                <strong>{topic.title}</strong>
+                <p>{topic.description}</p>
+              </div>
+
+              <select
+                value={progress[topic.id]}
+                onChange={(event) =>
+                  updateProgress(
+                    topic.id,
+                    event.target.value as KnowledgeLevel,
+                  )
+                }
+              >
+                <option value="not-started">Not started</option>
+                <option value="struggling">Need practice</option>
+                <option value="understood">Understood</option>
+              </select>
+            </div>
+          ))}
+        </div>
+
+        <button
+          className="primary-button"
+          onClick={generateRecommendation}
+        >
+          Get my recommendation
         </button>
       </section>
 
-      <div className="ticks"></div>
+      {recommendation && (
+        <section className="panel recommendation">
+          <span className="eyebrow">YOUR NEXT STEP</span>
+          <h2>{recommendation.topic.title}</h2>
+          <p>{recommendation.reason}</p>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <a
+            href={recommendation.topic.materialUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open learning material ↗
+          </a>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <div className="actions">
+            <button
+              className="primary-button"
+              onClick={() =>
+                setFeedback('Recommendation accepted.')
+              }
+            >
+              Accept
+            </button>
+
+            <button
+              className="secondary-button"
+              onClick={() =>
+                setFeedback('Recommendation rejected. Update your knowledge levels and try again.')
+              }
+            >
+              Reject
+            </button>
+          </div>
+
+          {feedback && <p className="feedback">{feedback}</p>}
+        </section>
+      )}
+
+      <footer>
+        Prototype · Personalized learning recommendations · 2026
+      </footer>
+    </main>
   )
 }
 
