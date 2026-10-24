@@ -1,5 +1,9 @@
 # React + TypeScript + Vite
 
+Project documentation: [architecture and startup](docs/ARCHITECTURE.md),
+[evaluation](docs/EVALUATION_REPORT.md), [practice evidence audit](docs/PRACTICE_CLOSURE_CHECKLIST.md),
+and [Codex/agent workflow and PR evidence (AND-8)](docs/AGENT_WORKFLOW.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -1,5 +1,14 @@
 # AI-Native Practice closure checklist — AND-7
 
+> AND-8 follow-up, verified 2026-10-22: [PR #4](https://github.com/Andrew-web-dev-coder/ai-learning-recommendation-assistant/pull/4)
+> merged this audit into `main` on 2026-10-20 as
+> [`2c624bd`](https://github.com/Andrew-web-dev-coder/ai-learning-recommendation-assistant/commit/2c624bd6786c71b27e68eff56a5b90c7446b3a15).
+> Its [CI verify job](https://github.com/Andrew-web-dev-coder/ai-learning-recommendation-assistant/actions/runs/39142283724/job/117718975625)
+> succeeded. GitHub displays “No reviews.” The original audit and blocked handoff
+> below are historical observations; see the [AND-8 workflow record](AGENT_WORKFLOW.md)
+> for current branch/commit/PR/CI/merge evidence and remaining gaps. Linear status
+> and official G0–G4 approvals remain unverified.
+
 Audit date: 2026-10-18. Source baseline: `a24ef5ec70be40382a03705b68d104569adc2e71`.
 Scope: existing React + TypeScript prototype and repository evidence. This is a
 documentation audit, not an official gate approval or a claim of practice completion.
