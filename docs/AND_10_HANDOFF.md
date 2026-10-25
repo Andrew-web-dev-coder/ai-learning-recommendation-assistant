@@ -20,7 +20,14 @@ Node v24.19.0 / npm 11.9.0 on 2026-10-25: `npm test` passed 13/13 in one file; `
 Target: `main`; baseline `147a42adb007dcc21e865f2192f80752caf861c6`.
 Branch: `docs/and-10-final-defense-package`.
 
-GitHub API read returned `Forbidden` in this session. PR creation and push outcome will be recorded after the actual attempt. No merge is authorized or performed. A compare URL is a review form, not evidence of a created PR.
+Branch push succeeded. Package commit: `693dd25` (the subsequent handoff update records this result).
+`gh pr create --base main --head docs/and-10-final-defense-package` with a prepared title/body failed: `Post "https://api.github.com/graphql": Forbidden`. GitHub API reads also returned `Forbidden`. **No PR was created by this session.** Native Git push success does not establish API access. No merge is authorized or performed; AND-10 remote CI is unverified.
+
+[Open the prepared branch comparison / PR form](https://github.com/Andrew-web-dev-coder/ai-learning-recommendation-assistant/compare/main...docs/and-10-final-defense-package?expand=1). This is a creation form, not an existing PR.
+
+Suggested title: `docs: prepare final practice evidence and defense package (AND-10)`.
+
+Suggested body: AND-10 adds the current G0–G4 matrix, final practice report, reproducible demo, presentation source and handoff, linked from README. Documentation only. Tests: 13/13 passed; ESLint and TypeScript/Vite build passed; local document targets and diff whitespace checks passed. Linear was unavailable, so the supplied scope was used. Browser demo execution, contribution attestation, administrative records, usefulness evidence, resource decisions and official approvals remain incomplete. Please review against main; do not infer gate approval from technical checks.
 
 ## Required human evidence
 
