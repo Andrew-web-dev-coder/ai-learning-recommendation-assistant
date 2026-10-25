@@ -24,13 +24,13 @@ This is the current delta to the detailed [AND-7 rubric inventory](PRACTICE_CLOS
 
 | Requirement | Status | Evidence and outstanding action |
 | --- | --- | --- |
-| Completed passport; lab; RU/EN titles; project type | Verified | [Passport §§1–12](PROJECT_PASSPORT.md): Lab 04, hybrid. This verifies the document, not topic approval. |
+| Completed passport; lab; RU/EN titles; project type | Verified | [Passport §§1–12](PROJECT_PASSPORT.md): Lab 04, hybrid. The diploma topic was separately approved by the university commission in October 2026. |
 | User/context and observable problem | Verified | Passport §§2–3 describes programming students and next-topic uncertainty; no user research validates prevalence. |
 | Available data | Verified | Five local topics in [learning.ts](../src/data/learning.ts), catalog checks pass. |
 | Vertical slice and acceptance criteria | Verified | Passport §§6,9 and [demo](DEFENSE_DEMO.md). |
 | Initial Linear / four-week plan | Missing | No inspected schedule or Linear plan; obtain actual dated plan, do not backdate one. |
 | EHU individual assignment | Missing | Student/supervisor must provide assignment and approval record. |
-| Topic approval | Missing | Authorized decision, date and link required. |
+| Topic approval | Verified | The diploma topic was approved by the university commission during its meetings on 14–15 October 2026. Official confirmation was communicated by Dr Kateryna Nasuro in an email dated 20 October 2026. The original email is retained by the student as evidence. |
 
 ## G2 — Vertical Slice: partial
 
