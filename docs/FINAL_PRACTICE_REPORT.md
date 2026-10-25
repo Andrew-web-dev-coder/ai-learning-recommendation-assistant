@@ -73,4 +73,8 @@ For AND-10, Codex inspected instructions, source, tests, docs, CI and fetched Gi
 
 Use [evidence matrix](FINAL_EVIDENCE_MATRIX.md) for requirement status and manual closure actions; [demo](DEFENSE_DEMO.md) for execution and recording; [presentation](DEFENSE_PRESENTATION.md) for a short defense. The old AND-7/AND-8 documents remain historical records; current report/presentation/script artifacts resolve their artifact-absence gaps, not the underlying execution or approval gaps.
 
-All gates remain partially evidenced and officially unverified. Required external actions include administrative/portal records, four-week plan and individual assignment, browser demo evidence, usefulness assessment, contribution attestation, resource inventory/cost decisions, final scope and critical-issue review, remote CI/human review and formal G0–G4 decisions. A local working app and green unit checks do not establish practice completion. No public deployment, presentation delivery, university submission or approval is claimed.
+The diploma project topic was officially approved by the university commission during its meetings on 14–15 October 2026, as confirmed in an email from Dr Kateryna Nasuro dated 20 October 2026. This approval concerns the diploma project topic and does not constitute formal approval of the AI-Native Practice G0–G4 gates.
+
+All G0–G4 practice gates remain partially evidenced, and their formal completion decisions are unverified. Required external actions include outstanding administrative/portal records, the four-week plan and individual assignment, browser demo evidence, usefulness assessment, contribution attestation, resource inventory/cost decisions, final scope and critical-issue review, remote CI/human review, and formal G0–G4 decisions.
+
+A local working application and passing unit tests do not establish practice completion. No public deployment, presentation delivery, or final practice completion approval is claimed.
