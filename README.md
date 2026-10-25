@@ -132,6 +132,16 @@ interaction. The manual demo above, preview command, external material links,
 accessibility, and AND-9 remote CI were not independently validated in this run.
 The tests establish agreement with predefined rules, not educational effectiveness.
 
+## Final defense package — AND-10
+
+Start with the [package index](docs/AND_10_HANDOFF.md), then review the
+[current G0–G4 matrix](docs/FINAL_EVIDENCE_MATRIX.md),
+[final report](docs/FINAL_PRACTICE_REPORT.md),
+[defense demo](docs/DEFENSE_DEMO.md), and
+[presentation source](docs/DEFENSE_PRESENTATION.md). These prepared artifacts
+do not establish browser-demo execution, student attestation, university
+submission, or official gate approval.
+
 ## Project documentation
 
 - [Architecture and data flow](docs/ARCHITECTURE.md)
