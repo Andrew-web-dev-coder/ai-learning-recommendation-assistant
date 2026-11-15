@@ -41,8 +41,8 @@ erDiagram
         integer position
     }
     topic_prerequisites {
-        bigint topic_id PK FK
-        bigint prerequisite_topic_id PK FK
+        bigint topic_id PK, FK
+        bigint prerequisite_topic_id PK, FK
     }
     content_snippets {
         bigint snippet_id PK
