@@ -75,6 +75,9 @@ function App() {
         }
 
         const data = await response.json()
+
+        if (controller.signal.aborted) return
+
         setCourses(data.courses ?? [])
       } catch (err) {
         if (controller.signal.aborted) return
@@ -101,13 +104,6 @@ function App() {
   // ==========================================
 
   useEffect(() => {
-    setExercises([])
-    setSelectedExercise('')
-    setAnswer('')
-    setResult(null)
-    setFeedback('')
-    setError('')
-
     if (!selectedCourse) return
 
     const controller = new AbortController()
@@ -126,6 +122,9 @@ function App() {
         }
 
         const data = await response.json()
+
+        if (controller.signal.aborted) return
+
         setExercises(data.exercises ?? [])
       } catch (err) {
         if (controller.signal.aborted) return
@@ -146,6 +145,24 @@ function App() {
 
     return () => controller.abort()
   }, [selectedCourse])
+
+  // ==========================================
+  // Handle course selection
+  // ==========================================
+
+  function handleCourseChange(courseId: string) {
+    setSelectedCourse(courseId)
+
+    // Reset dependent state when changing courses.
+    // These updates happen in an event handler,
+    // not synchronously inside useEffect.
+    setExercises([])
+    setSelectedExercise('')
+    setAnswer('')
+    setResult(null)
+    setFeedback('')
+    setError('')
+  }
 
   // ==========================================
   // Submit diagnostic answer
@@ -252,7 +269,7 @@ function App() {
         )
       }
 
-      // Update frontend only after successful API response
+      // Update frontend only after successful API response.
       setResult((current) => {
         if (!current?.recommendation) {
           return current
@@ -343,7 +360,7 @@ function App() {
           value={selectedCourse}
           disabled={loading || submitting || savingDecision}
           onChange={(event) => {
-            setSelectedCourse(event.target.value)
+            handleCourseChange(event.target.value)
           }}
         >
           <option value="">
