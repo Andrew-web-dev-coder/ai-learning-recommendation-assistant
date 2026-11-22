@@ -879,8 +879,9 @@
             ]
           },
           "error_category_id": {
-            "type": "null",
-            "nullable": true
+            "type": "string",
+            "nullable": true,
+            "description": "Always null for a correct answer"
           },
           "recommendation": {
             "type": "object",
