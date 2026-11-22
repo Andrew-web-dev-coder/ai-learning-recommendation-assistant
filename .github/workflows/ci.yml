@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate OpenAPI 3.0 specification
+        run: npx --yes @apidevtools/swagger-cli@4.0.4 validate docs/api/openapi.json
+
       - name: Run tests
         run: npm run test
 
