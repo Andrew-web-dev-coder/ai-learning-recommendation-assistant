@@ -1,0 +1,1033 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI Learning Recommendation Assistant API",
+    "version": "0.1.0",
+    "description": "Code-aligned REST API contract for the database-backed educational MVP. IDs returned from PostgreSQL BIGINT columns are JSON strings; request learner_id and exercise_id are positive safe JSON integers. No authentication is implemented in the current MVP. This document does not claim deployed production readiness."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Local Express backend"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "Courses"
+    },
+    {
+      "name": "Assessment"
+    },
+    {
+      "name": "Recommendations"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Check backend and PostgreSQL connectivity",
+        "responses": {
+          "200": {
+            "description": "Database connection successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "database": "learning_db",
+                  "message": "Backend connected to PostgreSQL"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database connection failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Database connection failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "List courses",
+        "responses": {
+          "200": {
+            "description": "Available courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoursesResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "courses": [
+                    {
+                      "course_id": "1",
+                      "course_code": "python",
+                      "title": "Introduction to Python"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Failed to fetch courses"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/topics": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "List ordered topics for a course",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+            },
+            "description": "Positive PostgreSQL BIGINT ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopicsResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "course_id": "1",
+                  "topics": [
+                    {
+                      "topic_id": "1",
+                      "title": "Data Types and Type Conversion",
+                      "position": 1
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid course ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Invalid course ID"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Course not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Course not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Failed to fetch topics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{courseId}/exercises": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "List active diagnostic exercises for a course",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+            },
+            "description": "Positive PostgreSQL BIGINT ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active exercises",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExercisesResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "course_id": "1",
+                  "exercises": [
+                    {
+                      "exercise_id": "1",
+                      "topic_id": "1",
+                      "prompt": "Explain the Python type comparison error.",
+                      "exercise_type": "text",
+                      "is_active": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid course ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Invalid course ID"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Course not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Course not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch exercises",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Failed to fetch exercises"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts": {
+      "post": {
+        "tags": [
+          "Assessment"
+        ],
+        "summary": "Assess an answer and create an attempt and optional recommendation",
+        "description": "Assessment currently recognizes only predefined answer variants for exercise IDs 1 and 2. Unknown answers return 422 uncertain without saving an attempt. For recognized incorrect answers an active recommendation rule is required; otherwise transaction is rolled back.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttemptRequest"
+              },
+              "example": {
+                "learner_id": 1,
+                "exercise_id": 1,
+                "submitted_answer": "python automatically converts strings to integers"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attempt saved: correct or incorrect assessment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CorrectAttemptResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/IncorrectAttemptResponse"
+                    }
+                  ]
+                },
+                "examples": {
+                  "correct": {
+                    "summary": "Recognized correct answer",
+                    "value": {
+                      "status": "ok",
+                      "attempt_id": "12",
+                      "assessment_status": "correct",
+                      "is_correct": true,
+                      "error_category_id": null,
+                      "recommendation": null,
+                      "message": "Answer assessed as correct"
+                    }
+                  },
+                  "incorrect": {
+                    "summary": "Recognized misconception",
+                    "value": {
+                      "status": "ok",
+                      "attempt_id": "13",
+                      "assessment_status": "incorrect",
+                      "is_correct": false,
+                      "error_category_id": "1",
+                      "recommendation": {
+                        "recommendation_id": "8",
+                        "recommendation_rule_id": "1",
+                        "topic_id": "1",
+                        "topic_title": "Data Types and Type Conversion",
+                        "explanation": "Example approved answer",
+                        "learner_decision": "pending"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid learner_id, exercise_id or submitted_answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Invalid learner_id, exercise_id or submitted_answer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Learner not found or active exercise not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "learner": {
+                    "value": {
+                      "status": "error",
+                      "message": "Learner not found"
+                    }
+                  },
+                  "exercise": {
+                    "value": {
+                      "status": "error",
+                      "message": "Active exercise not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Uncertain answer or missing assessment/recommendation configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/UncertainAttemptResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                },
+                "examples": {
+                  "uncertain": {
+                    "value": {
+                      "status": "uncertain",
+                      "assessment_status": "uncertain",
+                      "message": "The submitted answer cannot be classified with sufficient confidence",
+                      "recommendation": null
+                    }
+                  },
+                  "noRule": {
+                    "value": {
+                      "status": "error",
+                      "message": "No assessment rule for this exercise"
+                    }
+                  },
+                  "noCategory": {
+                    "value": {
+                      "status": "error",
+                      "message": "No error category configured for this rule"
+                    }
+                  },
+                  "noRecommendation": {
+                    "value": {
+                      "status": "error",
+                      "message": "No active recommendation rule found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to process attempt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Failed to process attempt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations/{recommendationId}/decision": {
+      "patch": {
+        "tags": [
+          "Recommendations"
+        ],
+        "summary": "Accept or reject a pending recommendation",
+        "description": "A decision is allowed only once. Repeating a decision for the same recommendation returns 409.",
+        "parameters": [
+          {
+            "name": "recommendationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+            },
+            "description": "Positive PostgreSQL BIGINT ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionRequest"
+              },
+              "example": {
+                "decision": "accepted"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "message": "Learner decision saved successfully",
+                  "recommendation": {
+                    "recommendation_id": "8",
+                    "attempt_id": "13",
+                    "learner_decision": "accepted"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid recommendation ID or decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "id": {
+                    "value": {
+                      "status": "error",
+                      "message": "Invalid recommendation ID"
+                    }
+                  },
+                  "decision": {
+                    "value": {
+                      "status": "error",
+                      "message": "Decision must be accepted or rejected"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Recommendation not found"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Recommendation has already been decided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Recommendation has already been decided"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to save learner decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "status": "error",
+                  "message": "Failed to save learner decision"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "database",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "database": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Course": {
+        "type": "object",
+        "required": [
+          "course_id",
+          "course_code",
+          "title"
+        ],
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "course_code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "CoursesResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "courses"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Course"
+            }
+          }
+        }
+      },
+      "Topic": {
+        "type": "object",
+        "required": [
+          "topic_id",
+          "title",
+          "position"
+        ],
+        "properties": {
+          "topic_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "TopicsResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "course_id",
+          "topics"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "course_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Topic"
+            }
+          }
+        }
+      },
+      "Exercise": {
+        "type": "object",
+        "required": [
+          "exercise_id",
+          "topic_id",
+          "prompt",
+          "exercise_type",
+          "is_active"
+        ],
+        "properties": {
+          "exercise_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "topic_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "exercise_type": {
+            "type": "string",
+            "enum": [
+              "code",
+              "text",
+              "multiple_choice"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExercisesResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "course_id",
+          "exercises"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "course_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Exercise"
+            }
+          }
+        }
+      },
+      "AttemptRequest": {
+        "type": "object",
+        "required": [
+          "learner_id",
+          "exercise_id",
+          "submitted_answer"
+        ],
+        "properties": {
+          "learner_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "exercise_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "submitted_answer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000,
+            "description": "Must contain non-whitespace text"
+          }
+        }
+      },
+      "Recommendation": {
+        "type": "object",
+        "required": [
+          "recommendation_id",
+          "recommendation_rule_id",
+          "topic_id",
+          "topic_title",
+          "explanation",
+          "learner_decision"
+        ],
+        "properties": {
+          "recommendation_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "recommendation_rule_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "topic_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "topic_title": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Currently sourced from the approved expected_answer field, not generated by an LLM."
+          },
+          "learner_decision": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected"
+            ]
+          }
+        }
+      },
+      "CorrectAttemptResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "attempt_id",
+          "assessment_status",
+          "is_correct",
+          "error_category_id",
+          "recommendation",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "attempt_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "assessment_status": {
+            "type": "string",
+            "enum": [
+              "correct"
+            ]
+          },
+          "is_correct": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "error_category_id": {
+            "type": "null",
+            "nullable": true
+          },
+          "recommendation": {
+            "type": "object",
+            "nullable": true,
+            "description": "Always null for a correct answer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "IncorrectAttemptResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "attempt_id",
+          "assessment_status",
+          "is_correct",
+          "error_category_id",
+          "recommendation"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "attempt_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "assessment_status": {
+            "type": "string",
+            "enum": [
+              "incorrect"
+            ]
+          },
+          "is_correct": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error_category_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+          },
+          "recommendation": {
+            "$ref": "#/components/schemas/Recommendation"
+          }
+        }
+      },
+      "UncertainAttemptResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "assessment_status",
+          "message",
+          "recommendation"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "uncertain"
+            ]
+          },
+          "assessment_status": {
+            "type": "string",
+            "enum": [
+              "uncertain"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "recommendation": {
+            "type": "object",
+            "nullable": true,
+            "description": "Always null"
+          }
+        }
+      },
+      "DecisionRequest": {
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "rejected"
+            ]
+          }
+        }
+      },
+      "DecisionResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "recommendation"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "recommendation": {
+            "type": "object",
+            "required": [
+              "recommendation_id",
+              "attempt_id",
+              "learner_decision"
+            ],
+            "properties": {
+              "recommendation_id": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$",
+                "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+              },
+              "attempt_id": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*$",
+                "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+              },
+              "learner_decision": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "rejected"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
