@@ -13,7 +13,7 @@ This documentation describes the **currently implemented** Express/PostgreSQL MV
 
 - Node.js 24 and npm (matching the repository CI guidance).
 - A running PostgreSQL instance.
-- A local PostgreSQL database with the schema from `database/migrations/001_initial_schema.sql` and reference data from `database/seeds/001_reference_data.sql`. The demo requires a learner row; the frontend currently assumes learner ID 1. Consult `database/` before running scripts and verify the local database state.
+- A local PostgreSQL database with the schema from `database/migrations/001_initial_schema.sql` and reference data from `database/seeds/001_reference_data.sql`. The seed script inserts `DEMO_LEARNER_001`. In a freshly initialized empty database, the frontend assumes its generated ID is 1; verify actual IDs before making requests.
 - Do not commit credentials, passwords or API keys.
 
 ### Start the server
@@ -35,7 +35,7 @@ DB_NAME=your_local_db_name
 PORT=3001
 ```
 
-Initialize the schema and reference data using your PostgreSQL client, with the correct database selected. The SQL files live under `database/migrations/` and `database/seeds/`; run schema creation before seeding. **Check seed data for the learner record** before trying the example POST request.
+Initialize the schema and reference data using your PostgreSQL client, with the correct database selected. The SQL files live under `database/migrations/` and `database/seeds/`; run schema creation before seeding. **The seed script creates a demo learner**; verify its actual ID before trying the example POST request.
 
 ```bash
 npm run server:dev
@@ -72,7 +72,7 @@ All request and response bodies are JSON. `POST` and `PATCH` require `Content-Ty
 
 ## Step-by-step integration tutorial
 
-This scenario uses the current deterministic Python assessment patterns. The specific IDs in these examples are **illustrative**; read the actual course/exercise IDs from your local database.
+This scenario uses the current deterministic Python assessment patterns. The IDs in these examples assume a **fresh, empty database** initialized with the supplied migration and seed. In an existing database, discover actual IDs first.
 
 **1. Find courses.**
 
@@ -83,7 +83,7 @@ curl -i http://localhost:3001/api/courses
 Example response structure:
 
 ```json
-{"status":"ok","courses":[{"course_id":"1","course_code":"python","title":"Introduction to Python"}]}
+{"status":"ok","courses":[{"course_id":"1","course_code":"PYTHON","title":"Introduction to Python"}]}
 ```
 
 **2. Find exercises in the selected course.**
@@ -146,13 +146,13 @@ See `openapi.json` for endpoint-specific response messages and schemas. There is
 
 ## API documentation validation
 
-The specification is OpenAPI **3.0.3 JSON** and can be imported into Swagger Editor or another OpenAPI validator. A useful local structural check is:
+The specification is OpenAPI **3.0.3 JSON** and can be imported into Swagger Editor or another OpenAPI validator. CI runs a dedicated OpenAPI validator against the JSON file. A useful local structural check is:
 
 ```bash
 node -e "const s=require('./docs/api/openapi.json'); if(s.openapi!=='3.0.3'||Object.keys(s.paths).length!==6)process.exit(1); console.log('OpenAPI JSON parsed; six paths present')"
 ```
 
-This only checks JSON parsing and path count. **It is not full OpenAPI schema validation.** Before submission, run a dedicated OpenAPI validator and review its results; runtime HTTP checks also require a running PostgreSQL database.
+This only checks JSON parsing and path count. **It is not full OpenAPI schema validation.** Run `npx --yes @apidevtools/swagger-cli@4.0.4 validate docs/api/openapi.json` locally to perform dedicated OpenAPI validation. Runtime HTTP checks still require a running PostgreSQL database.
 
 ## Current implementation limitations
 
