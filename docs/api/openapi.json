@@ -84,7 +84,7 @@
                   "courses": [
                     {
                       "course_id": "1",
-                      "course_code": "python",
+                      "course_code": "PYTHON",
                       "title": "Introduction to Python"
                     }
                   ]
@@ -142,7 +142,7 @@
                   "topics": [
                     {
                       "topic_id": "1",
-                      "title": "Data Types and Type Conversion",
+                      "title": "Data Types",
                       "position": 1
                     }
                   ]
@@ -229,8 +229,8 @@
                     {
                       "exercise_id": "1",
                       "topic_id": "1",
-                      "prompt": "Explain the Python type comparison error.",
-                      "exercise_type": "text",
+                      "prompt": "Explain why age = \"18\" followed by age >= 18 causes an error.",
+                      "exercise_type": "code",
                       "is_active": true
                     }
                   ]
@@ -344,9 +344,9 @@
                       "recommendation": {
                         "recommendation_id": "8",
                         "recommendation_rule_id": "1",
-                        "topic_id": "1",
-                        "topic_title": "Data Types and Type Conversion",
-                        "explanation": "Example approved answer",
+                        "topic_id": "2",
+                        "topic_title": "Type Conversion",
+                        "explanation": "A string cannot be directly compared with an integer using >= in Python 3.",
                         "learner_decision": "pending"
                       }
                     }
@@ -881,11 +881,17 @@
           "error_category_id": {
             "type": "string",
             "nullable": true,
+            "enum": [
+              null
+            ],
             "description": "Always null for a correct answer"
           },
           "recommendation": {
             "type": "object",
             "nullable": true,
+            "enum": [
+              null
+            ],
             "description": "Always null for a correct answer"
           },
           "message": {
@@ -964,7 +970,10 @@
           "recommendation": {
             "type": "object",
             "nullable": true,
-            "description": "Always null"
+            "enum": [
+              null
+            ],
+            "description": "Always null for an uncertain answer"
           }
         }
       },
