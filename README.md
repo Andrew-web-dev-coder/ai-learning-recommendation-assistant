@@ -1,4 +1,22 @@
-# Learning Path Assistant
+# AI Learning Recommendation Assistant — current diploma MVP
+
+**Current implementation (November 2026):** React + TypeScript frontend, Express REST API, PostgreSQL persistence and deterministic assessment/recommendation logic. The current demo supports introductory Python and selected Lithuanian grammar exercises. It does **not** yet integrate an external LLM, authentication or a production deployment.
+
+## Start here
+
+- [API documentation and integration tutorial](docs/api/README.md)
+- [OpenAPI 3.0.3 contract](docs/api/openapi.json)
+- [Current architecture and request sequences](docs/api/ARCHITECTURE.md)
+- Backend routes: `server/index.ts`; deterministic classifier: `server/assessment.ts`
+- Database migration: `database/migrations/001_initial_schema.sql`; reference seed: `database/seeds/001_reference_data.sql`
+
+To run locally, install dependencies with `npm ci`, configure PostgreSQL using `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, run the migration and seed, then launch `npm run server:dev` and `npm run dev` in separate terminals. See the API tutorial for detailed commands and sample requests.
+
+The historical practice report below documents an **earlier October 2026 JavaScript-only prototype** and should not be read as describing the current backend.
+
+---
+
+## Archived practice README (October 2026)
 
 A browser-based educational recommendation prototype for EHU AI-Native Practice
 2026. It helps a student choose the next JavaScript topic from a learning goal
