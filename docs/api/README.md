@@ -1,6 +1,30 @@
 # REST API integration guide
 
-The [OpenAPI 3.0.3 contract](openapi.json) documents all six operations for API version 0.1.0. See the [architecture and request sequences](ARCHITECTURE.md), [security and privacy notes](SECURITY.md), and [API changelog and version policy](CHANGELOG.md).
+The [OpenAPI 3.0.3 reference](openapi.json) defines all six operations for API version 0.1.0. The local educational MVP requires no login or token. Use only synthetic data on a trusted local network.
+
+## Contents
+
+- [Quick start](#getting-started)
+- [Endpoint reference](#endpoints)
+- [Python and Lithuanian integration walkthrough](#powershell-integration-walkthrough)
+- [Error handling and recovery](#error-handling-and-recovery)
+- [Swagger Editor](#swagger-editor)
+- [Testing and troubleshooting](#testing-and-troubleshooting)
+- [Current limitations and releases](#current-limitations-and-releases)
+- [Maintaining the contract](#maintaining-the-contract)
+
+## Documentation map
+
+| Document | Use it for |
+| --- | --- |
+| [OpenAPI reference](openapi.json) | Operations, schemas, content types and examples |
+| [API design](API_DESIGN.md) | Design, error taxonomy, retries, pagination and rate-limit proposals |
+| [Architecture](ARCHITECTURE.md) | Context, dependencies, transactions and request sequences |
+| [Security](SECURITY.md) | Current trust boundaries and future identity and ownership design |
+| [Changelog](CHANGELOG.md) | API releases, compatibility and deprecation |
+| [Testing](TESTING.md) | Local and CI contract verification |
+| [Documentation strategy](DOCUMENTATION_STRATEGY.md) | Standards, maintenance and material for the written report |
+| [Rubric traceability](RUBRIC_TRACEABILITY.md) | Repository evidence and assessment gaps |
 
 ## Getting started
 
@@ -149,37 +173,26 @@ An answer such as `Something unrelated` for either seeded exercise returns HTTP 
 
 ## Error handling and recovery
 
-| Operation | Current response | Client action |
-| --- | --- | --- |
-| Health | 500 `Database connection failed` | Check database availability and backend configuration before retrying. |
-| Courses | 500 `Failed to fetch courses` | Retry the read with bounded backoff for transient failures. |
-| Course topics or exercises | 400 invalid course ID, 404 course missing, or 500 fetch failure | Validate ID format, refresh the course list on 404, or retry a transient 500 with bounded backoff. A 200 with an empty list is valid. |
-| Submit attempt | 400 invalid body fields, or 404 learner or active exercise missing | Correct the payload, verify the local learner, or refresh the active exercise list. |
-| Submit attempt | 422 with `status: "uncertain"` | Give the learner a chance to revise the answer. The transaction rolls back. |
-| Submit attempt | 422 with `status: "error"` for a missing answer rule, error category or active recommendation rule | Report a configuration problem to the maintainer. Wait for the configuration to be corrected before resubmitting. An attempt inserted before recommendation lookup is rolled back. |
-| Submit attempt | 500 database connection or attempt processing failure | Investigate database health. The handler attempts rollback for processing exceptions and releases the connection. A timeout or connection loss leaves the client unsure whether a commit happened. |
-| Save decision | 400 invalid ID or decision, 404 recommendation missing, or 409 already decided | Correct the request, verify the ID, or stop submitting changes on conflict. A 409 does not tell the client which decision won. |
-| Save decision | 500 `Failed to save learner decision` | Investigate database health. The conditional update permits only one successful transition. A retry after an ambiguous failure may return 409. |
-
-A POST has no idempotency key or duplicate detection. Disable repeated submissions while a request is in flight and avoid automatic POST retries after timeouts or uncertain delivery. The API has no attempt or recommendation lookup route for reconciling an ambiguous write. Handler errors generally return `status` and `message`, without a machine-readable error code or correlation ID. Express middleware can reject malformed JSON or an oversized body before the handler runs and return its default error format. Parse the response based on its content type.
-
-Future recovery improvements could add idempotency keys, stable error codes, correlation IDs and an authorized lookup for reconciling writes.
+See the [error taxonomy](API_DESIGN.md#error-taxonomy) for endpoint-specific status codes, response shapes and recovery. For an uncertain result, preserve the answer and invite the learner to revise it. For a decision conflict, stop submitting changes. Avoid automatically retrying a write when delivery is ambiguous. Inspect the response content type before interpreting an error because Express parser errors can return HTML.
 
 ## Swagger Editor
 
 Import `docs/api/openapi.json` through **File → Import File** in [Swagger Editor](https://editor.swagger.io/) to inspect operations, response variants and request examples. The specification points to `http://localhost:3001`. Hosted Swagger Editor can inspect the file, but its browser origin is outside the current API's CORS configuration for live requests. Use PowerShell or curl for live calls with the standard local setup.
 
+## Testing and troubleshooting
+
+Use `npm run test` for unit checks. The [testing guide](TESTING.md#reproduce-locally) gives the isolated PostgreSQL setup for `npm run test:contract`, plus the scope of response and persistence verification.
+
+- **API connection refused:** confirm the backend is running at the address and port used by your HTTP client.
+- **Health returns 500:** check the database process, role, database name and `.env` values. Inspect backend logs before retrying.
+- **Missing learner or exercise:** recheck the reference seed and use the IDs returned by the SQL query and exercise endpoint above.
+- **Browser CORS error:** use the configured Vite origin `http://localhost:5173`. A direct HTTP client can inspect the live API independently of the browser origin.
+- **Unexpected uncertainty:** verify the exact seeded exercise and use a documented answer variant.
+
+## Current limitations and releases
+
+The backend accepts caller-supplied learner IDs and lacks authentication and ownership checks. The frontend assumes the demo learner has ID 1. Assessment uses predefined variants for two exercise IDs and cannot classify arbitrary answers. Collections are unpaginated. Rate limiting and idempotency keys are future design proposals. See [API design](API_DESIGN.md) and [security](SECURITY.md) for details. The [changelog](CHANGELOG.md) tracks the current API contract version 0.1.0 and future versioning policy.
+
 ## Maintaining the contract
 
-Treat [OpenAPI](openapi.json) as the API contract. When changing a route, database serialization or frontend integration, the PR author checks the corresponding request validation, response shape, status codes and client assumptions against the spec. Update the spec, affected examples and changelog in the same PR when the contract changes. Use the [version policy](CHANGELOG.md) to review compatibility.
-
-Reviewers should compare the diff with the routes, schema, reference data and frontend call sites. Verify that example answers match the classifier and expected rules. Run the [CI workflow](../../.github/workflows/ci.yml) checks locally and require the PR checks to pass before merging.
-
-```sh
-npx --yes @apidevtools/swagger-cli@4.0.4 validate docs/api/openapi.json
-npm run test
-npm run lint
-npm run build
-```
-
-CI validates OpenAPI structure and runs unit tests, lint and build. For contract verification, also run HTTP checks against a fresh local PostgreSQL database after route, schema or reference data changes. Compare actual JSON shapes, ID types and status codes against OpenAPI, including success, uncertainty, rule failure and repeated decisions. The existing CI job does not provision PostgreSQL or execute those HTTP checks.
+Treat [OpenAPI](openapi.json) as the API contract. Update the spec, affected examples and changelog in the same PR when the contract changes. Review wire types, error responses, consumer assumptions and seeded paths. Run the [validation commands](TESTING.md#what-each-check-establishes), including live contract checks for HTTP or database behavior changes. See the [documentation strategy](DOCUMENTATION_STRATEGY.md#change-management-and-versioning) for PR responsibilities.

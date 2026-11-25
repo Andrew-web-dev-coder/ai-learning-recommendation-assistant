@@ -35,3 +35,39 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  http-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: contract
+          POSTGRES_PASSWORD: contract_ci_only
+        ports:
+          - 5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U contract -d postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify live HTTP responses and database consistency
+        env:
+          CONTRACT_DB_URL: postgresql://contract:contract_ci_only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres
+        run: npm run test:contract
