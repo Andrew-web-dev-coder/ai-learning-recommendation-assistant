@@ -3,7 +3,7 @@
   "info": {
     "title": "AI Learning Recommendation Assistant API",
     "version": "0.1.0",
-    "description": "REST API for the database-backed educational MVP. PostgreSQL BIGINT response IDs are decimal strings. Attempt request IDs are positive JSON safe integers. The API has no authentication or authorization. JSON response schemas describe route-handler responses. Express JSON parsing can reject a request before it reaches a handler (for example, malformed JSON or a body above the default parser limit)."
+    "description": "REST API for the database-backed educational MVP. PostgreSQL BIGINT response IDs are decimal strings. Attempt request IDs are positive JSON safe integers. The API is unauthenticated. Route handlers return JSON. The default Express error handler can return HTML for parser and routing errors."
   },
   "servers": [
     {
@@ -157,7 +157,7 @@
             }
           },
           "400": {
-            "description": "Invalid course ID",
+            "description": "Invalid course ID; Express may also return an HTML 400 before the route handler.",
             "content": {
               "application/json": {
                 "schema": {
@@ -166,6 +166,12 @@
                 "example": {
                   "status": "error",
                   "message": "Invalid course ID"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -248,7 +254,7 @@
             }
           },
           "400": {
-            "description": "Invalid course ID",
+            "description": "Invalid course ID; Express may also return an HTML 400 before the route handler.",
             "content": {
               "application/json": {
                 "schema": {
@@ -257,6 +263,12 @@
                 "example": {
                   "status": "error",
                   "message": "Invalid course ID"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -299,7 +311,7 @@
           "Assessment"
         ],
         "summary": "Assess an answer and create an attempt and optional recommendation",
-        "description": "Assessment matches predefined variants for exercise IDs 1 (Python) and 2 (Lithuanian). A correct answer saves an attempt with no recommendation. An incorrect answer saves the attempt and pending recommendation together. An uncertain result or missing required rule configuration returns 422 and rolls back the transaction.",
+        "description": "Assessment matches predefined variants for exercise IDs 1 (Python) and 2 (Lithuanian). A correct answer saves an attempt with no recommendation. An incorrect answer saves the attempt and pending recommendation together. An uncertain result or missing required rule configuration returns 422 and rolls back the transaction. Each accepted submission creates a new attempt. This operation does not deduplicate requests.",
         "requestBody": {
           "required": true,
           "content": {
@@ -390,13 +402,31 @@
                         "learner_decision": "pending"
                       }
                     }
+                  },
+                  "lithuanianIncorrect": {
+                    "summary": "Recognized Lithuanian misconception",
+                    "value": {
+                      "status": "ok",
+                      "attempt_id": "14",
+                      "assessment_status": "incorrect",
+                      "is_correct": false,
+                      "error_category_id": "2",
+                      "recommendation": {
+                        "recommendation_id": "9",
+                        "recommendation_rule_id": "2",
+                        "topic_id": "4",
+                        "topic_title": "Accusative Case",
+                        "explanation": "The correct form is mokyklą because į requires the accusative case for direction.",
+                        "learner_decision": "pending"
+                      }
+                    }
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid learner_id, exercise_id or submitted_answer",
+            "description": "Invalid learner_id, exercise_id or submitted_answer; Express may also return an HTML 400 before the route handler.",
             "content": {
               "application/json": {
                 "schema": {
@@ -405,6 +435,12 @@
                 "example": {
                   "status": "error",
                   "message": "Invalid learner_id, exercise_id or submitted_answer"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -429,6 +465,28 @@
                       "message": "Active exercise not found"
                     }
                   }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON body exceeds the default Express parser limit of 100 KiB (102,400 bytes). The handler-level answer length limit instead returns JSON HTTP 400.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported JSON charset or content encoding rejected by Express middleware.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -534,8 +592,17 @@
               "schema": {
                 "$ref": "#/components/schemas/DecisionRequest"
               },
-              "example": {
-                "decision": "accepted"
+              "examples": {
+                "accepted": {
+                  "value": {
+                    "decision": "accepted"
+                  }
+                },
+                "rejected": {
+                  "value": {
+                    "decision": "rejected"
+                  }
+                }
               }
             }
           }
@@ -548,20 +615,35 @@
                 "schema": {
                   "$ref": "#/components/schemas/DecisionResponse"
                 },
-                "example": {
-                  "status": "ok",
-                  "message": "Learner decision saved successfully",
-                  "recommendation": {
-                    "recommendation_id": "8",
-                    "attempt_id": "13",
-                    "learner_decision": "accepted"
+                "examples": {
+                  "accepted": {
+                    "value": {
+                      "status": "ok",
+                      "message": "Learner decision saved successfully",
+                      "recommendation": {
+                        "recommendation_id": "8",
+                        "attempt_id": "13",
+                        "learner_decision": "accepted"
+                      }
+                    }
+                  },
+                  "rejected": {
+                    "value": {
+                      "status": "ok",
+                      "message": "Learner decision saved successfully",
+                      "recommendation": {
+                        "recommendation_id": "8",
+                        "attempt_id": "13",
+                        "learner_decision": "rejected"
+                      }
+                    }
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid recommendation ID or decision",
+            "description": "Invalid recommendation ID or decision; Express may also return an HTML 400 before the route handler.",
             "content": {
               "application/json": {
                 "schema": {
@@ -580,6 +662,12 @@
                       "message": "Decision must be accepted or rejected"
                     }
                   }
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -608,6 +696,28 @@
                 "example": {
                   "status": "error",
                   "message": "Recommendation has already been decided"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON body exceeds the default Express parser limit of 100 KiB (102,400 bytes).",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported JSON charset or content encoding rejected by Express middleware.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "description": "Default Express error page. Its content varies with the runtime environment."
                 }
               }
             }
@@ -795,7 +905,10 @@
             ]
           },
           "is_active": {
-            "type": "boolean"
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         }
       },

@@ -2,6 +2,24 @@
 
 The current database-backed MVP runs a Python and Lithuanian diagnostic workflow. The earlier browser-only JavaScript prototype is described in the [October practice archive](../ARCHITECTURE.md).
 
+## System context
+
+```mermaid
+flowchart LR
+    Learner["Learner"] --> Browser["Browser demo"]
+    Developer["Developer or integrator"] --> Client["Direct HTTP client"]
+    Browser --> Platform
+    Client --> Platform
+    subgraph Platform["Local learning recommendation system"]
+        API["Express REST API"] --> DB[("PostgreSQL")]
+    end
+    Operator["Local database operator"] -->|"Apply migrations and seed data"| DB
+```
+
+The browser and direct clients use the same six-operation HTTP contract. The local operator provisions the schema and seed catalog. There is one API process and one PostgreSQL database connection pool per process.
+
+## Components and dependencies
+
 ```mermaid
 flowchart LR
     Learner["Learner"] <-->|"Answer, recommendation and decision"| UI["React + TypeScript frontend"]
@@ -22,7 +40,17 @@ flowchart LR
 
 Learners decide whether to follow a recommendation. An accepted or rejected decision is persisted on its recommendation row. This update does not change the rule set or track completion of the recommended topic.
 
+| Caller | Dependency | Connection or invocation |
+| --- | --- | --- |
+| React or direct client | Express route handlers | Local HTTP, JSON for writes and handler responses |
+| Express attempt handler | Deterministic assessment module | In-process TypeScript call with numeric exercise ID and raw answer |
+| Express route handlers | `pg` pool and PostgreSQL | Parameterized SQL over the configured database connection |
+| Attempt handler rule selection | Answer rules, error categories, recommendation rules and topics | SQL queries within the same attempt transaction |
+| Express decision handler | Recommendations table | One conditional UPDATE, then an existence query only if the UPDATE returns no row |
+
 ## Sequence diagrams
+
+Both write sequences begin after Express has matched the route and parsed JSON. Parser or path-decoding failures can terminate before route logic with the [framework error responses](API_DESIGN.md#error-taxonomy).
 
 ### Diagnostic answer and recommendation
 
@@ -80,6 +108,8 @@ sequenceDiagram
     end
 ```
 
+Correct and incorrect outputs are returned after COMMIT. A recognized misconception is categorized using the chosen answer rule. The recommendation join selects the topic for the lowest priority number, then lowest recommendation rule ID. A missing rule after the attempt insert rolls back that insert. A processing exception attempts rollback and releases the client. PostgreSQL sequence values may still advance after rollback, so gaps in returned IDs do not imply missing committed attempts.
+
 ### Recommendation decision
 
 ```mermaid
@@ -107,6 +137,8 @@ sequenceDiagram
         Note over API,DB: UPDATE is a single atomic statement. There is no explicit transaction around the follow-up SELECT.
     end
 ```
+
+The pending condition is part of the SQL UPDATE. Under competing accept and reject requests, one transition takes effect. A later request finds no pending row and returns 409 if the recommendation still exists. An existing decision cannot be overwritten through this route.
 
 ## Future LLM integration
 
