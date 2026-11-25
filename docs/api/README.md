@@ -1,30 +1,16 @@
-# REST API Documentation — Stage 3
+# REST API integration guide
 
-This documentation describes the **currently implemented** Express/PostgreSQL MVP, based on `server/index.ts` and `server/assessment.ts`. It is not a claim of production deployment or a live integration-test result.
+The [OpenAPI 3.0.3 contract](openapi.json) documents all six operations for API version 0.1.0. See the [architecture and request sequences](ARCHITECTURE.md), [security and privacy notes](SECURITY.md), and [API changelog and version policy](CHANGELOG.md).
 
-## Contents
+## Getting started
 
-- [OpenAPI 3.0.3 specification](openapi.json) — six implemented endpoints, JSON request/response schemas, HTTP status codes and error cases.
-- This README — local setup, request examples, integration walkthrough, limitations.
+Use Node.js 24, npm, a local PostgreSQL server and its `psql` client. Run commands from the repository root. The setup commands work in PowerShell and POSIX shells.
 
-## Getting Started
-
-### Requirements
-
-- Node.js 24 and npm (matching the repository CI guidance).
-- A running PostgreSQL instance.
-- A local PostgreSQL database with the schema from `database/migrations/001_initial_schema.sql` and reference data from `database/seeds/001_reference_data.sql`. The seed script inserts `DEMO_LEARNER_001`. In a freshly initialized empty database, the frontend assumes its generated ID is 1; verify actual IDs before making requests.
-- Do not commit credentials, passwords or API keys.
-
-### Start the server
-
-```bash
-git clone https://github.com/Andrew-web-dev-coder/ai-learning-recommendation-assistant.git
-cd ai-learning-recommendation-assistant
+```sh
 npm ci
 ```
 
-Configure the PostgreSQL connection through environment variables (for example, in a local untracked `.env` file):
+Create a fresh, empty PostgreSQL database accessible to a local development role. Create a local `.env` using your database settings. The repository ignores `.env`.
 
 ```dotenv
 DB_HOST=localhost
@@ -35,130 +21,165 @@ DB_NAME=your_local_db_name
 PORT=3001
 ```
 
-Initialize the schema and reference data using your PostgreSQL client, with the correct database selected. The SQL files live under `database/migrations/` and `database/seeds/`; run schema creation before seeding. **The seed script creates a demo learner**; verify its actual ID before trying the example POST request.
+Apply the [schema](../../database/migrations/001_initial_schema.sql), [indexes](../../database/migrations/002_indexes.sql), then [reference seed](../../database/seeds/001_reference_data.sql). Replace the database name and role placeholders and stop if any command fails. `psql` can prompt for the password. The reference seed is intended to run once on an empty database.
 
-```bash
+```sh
+psql -h localhost -p 5432 -U your_local_db_user -d your_local_db_name -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
+psql -h localhost -p 5432 -U your_local_db_user -d your_local_db_name -v ON_ERROR_STOP=1 -f database/migrations/002_indexes.sql
+psql -h localhost -p 5432 -U your_local_db_user -d your_local_db_name -v ON_ERROR_STOP=1 -f database/seeds/001_reference_data.sql
+psql -h localhost -p 5432 -U your_local_db_user -d your_local_db_name -c "SELECT learner_id FROM learners WHERE learner_code = 'DEMO_LEARNER_001';"
 npm run server:dev
 ```
 
-The backend listens at `http://localhost:3001` by default. In another terminal, optionally start the frontend with `npm run dev` (Vite typically uses `http://localhost:5173`). The current backend CORS configuration allows that origin only.
+In a separate terminal, verify that the API returns HTTP 200 and a body with `status: "ok"`, the local database name and `message: "Backend connected to PostgreSQL"`.
 
-### Verify connectivity
-
-```bash
+```sh
 curl -i http://localhost:3001/api/health
 ```
 
-Expected shape when PostgreSQL is reachable:
-
-```json
-{"status":"ok","database":"your_local_db_name","message":"Backend connected to PostgreSQL"}
-```
-
-A failed database connection returns HTTP 500.
+In Windows PowerShell, use `curl.exe` for the same command or `Invoke-RestMethod` as below. To run the React demo, run `npm run dev` in a separate terminal and open `http://localhost:5173`. The frontend targets port 3001 and uses demo learner ID 1.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/health` | Check backend and database |
-| GET | `/api/courses` | List courses |
-| GET | `/api/courses/{courseId}/topics` | List topics in a course |
-| GET | `/api/courses/{courseId}/exercises` | List active diagnostic exercises |
-| POST | `/api/attempts` | Assess an answer; persist a recognized attempt and recommendation |
+| GET | `/api/health` | Check backend and database connectivity |
+| GET | `/api/courses` | List courses ordered by title |
+| GET | `/api/courses/{courseId}/topics` | List topics ordered by position and ID |
+| GET | `/api/courses/{courseId}/exercises` | List active exercises ordered by topic position and exercise ID |
+| POST | `/api/attempts` | Assess an answer and persist a recognized attempt with any resulting recommendation |
 | PATCH | `/api/recommendations/{recommendationId}/decision` | Accept or reject a pending recommendation |
 
-All request and response bodies are JSON. `POST` and `PATCH` require `Content-Type: application/json`. PostgreSQL `BIGINT` IDs in responses are **decimal strings**, while `learner_id` and `exercise_id` in the POST body are positive **JSON safe integers**.
+Send JSON writes with `Content-Type: application/json`. Keep returned PostgreSQL BIGINT IDs as decimal strings, including when interpolating a URL. Path IDs are positive, have no leading zeroes and are bounded by `9223372036854775807`. Only `learner_id` and `exercise_id` in attempt bodies must be JSON numbers in the range 1 through `9007199254740991`. Validate that range before converting a returned ID for use in a request body.
 
-## Step-by-step integration tutorial
+## PowerShell integration walkthrough
 
-This scenario uses the current deterministic Python assessment patterns. The IDs in these examples assume a **fresh, empty database** initialized with the supplied migration and seed. In an existing database, discover actual IDs first.
+### Discover courses and exercises
 
-**1. Find courses.**
+```powershell
+$api = 'http://localhost:3001'
+Invoke-RestMethod -Uri "$api/api/health"
 
-```bash
-curl -i http://localhost:3001/api/courses
+$courses = (Invoke-RestMethod -Uri "$api/api/courses").courses
+$pythonCourse = $courses | Where-Object { $_.course_code -eq 'PYTHON' }
+$lithuanianCourse = $courses | Where-Object { $_.course_code -eq 'LITHUANIAN' }
+
+$pythonExercises = (Invoke-RestMethod -Uri "$api/api/courses/$($pythonCourse.course_id)/exercises").exercises
+$lithuanianExercises = (Invoke-RestMethod -Uri "$api/api/courses/$($lithuanianCourse.course_id)/exercises").exercises
+$pythonExercises | Format-Table exercise_id, prompt
+$lithuanianExercises | Format-Table exercise_id, prompt
 ```
 
-Example response structure:
+Use the ID returned by the learner query above. Match the exercise IDs to the displayed prompts. The Python string comparison and Lithuanian grammar prompts must have IDs 1 and 2 respectively for these patterns to work. The classifier keys on numeric IDs, so adding seed data to an existing database can change how a prompt is classified. Use a freshly initialized reference database for this walkthrough.
+
+```powershell
+$learnerId = [long](Read-Host 'Enter the demo learner ID')
+$pythonExerciseId = [long](Read-Host 'Enter the Python exercise ID')
+$lithuanianExerciseId = [long](Read-Host 'Enter the Lithuanian exercise ID')
+```
+
+### Python diagnostic and acceptance
+
+Submit a recognized misconception. Expect HTTP 201 with `assessment_status: "incorrect"` and a pending **Type Conversion** recommendation.
+
+```powershell
+$pythonBody = @{
+    learner_id = $learnerId
+    exercise_id = $pythonExerciseId
+    submitted_answer = 'python automatically converts strings to integers'
+} | ConvertTo-Json
+
+$pythonAttempt = Invoke-RestMethod -Method Post -Uri "$api/api/attempts" `
+    -ContentType 'application/json; charset=utf-8' -Body $pythonBody
+$pythonAttempt | ConvertTo-Json -Depth 5
+
+$pythonRecommendationId = $pythonAttempt.recommendation.recommendation_id
+Invoke-RestMethod -Method Patch -Uri "$api/api/recommendations/$pythonRecommendationId/decision" `
+    -ContentType 'application/json' -Body '{"decision":"accepted"}'
+```
+
+The PATCH returns HTTP 200 with the saved decision in `recommendation.learner_decision`.
+
+### Lithuanian diagnostic and rejection
+
+Submit a recognized misconception. Expect HTTP 201 with a pending **Accusative Case** recommendation, then HTTP 200 with `learner_decision: "rejected"` for that recommendation.
+
+```powershell
+$lithuanianBody = @{
+    learner_id = $learnerId
+    exercise_id = $lithuanianExerciseId
+    submitted_answer = 'mokykla is correct'
+} | ConvertTo-Json
+
+$lithuanianAttempt = Invoke-RestMethod -Method Post -Uri "$api/api/attempts" `
+    -ContentType 'application/json; charset=utf-8' -Body $lithuanianBody
+$lithuanianAttempt | ConvertTo-Json -Depth 5
+
+$lithuanianRecommendationId = $lithuanianAttempt.recommendation.recommendation_id
+Invoke-RestMethod -Method Patch -Uri "$api/api/recommendations/$lithuanianRecommendationId/decision" `
+    -ContentType 'application/json' -Body '{"decision":"rejected"}'
+```
+
+To see the correct-answer path, submit `i need to convert the string into an integer` for Python or `aš einu į mokyklą` for Lithuanian. Keep the UTF-8 content type and save any script containing Lithuanian text as UTF-8 with BOM if running it in Windows PowerShell 5.1. A correct attempt returns HTTP 201 with `recommendation: null`.
+
+### Inspect error responses
+
+Re-run either decision request to get HTTP 409. PowerShell's `Invoke-RestMethod` throws on non-2xx responses by default. Use `curl.exe -i "$api/api/courses/0/topics"` on Windows to inspect a raw HTTP 400 response.
 
 ```json
-{"status":"ok","courses":[{"course_id":"1","course_code":"PYTHON","title":"Introduction to Python"}]}
+{"status":"error","message":"Invalid course ID"}
 ```
 
-**2. Find exercises in the selected course.**
+A repeated decision returns:
 
-```bash
-curl -i http://localhost:3001/api/courses/1/exercises
+```json
+{"status":"error","message":"Recommendation has already been decided"}
 ```
 
-Also available: `GET /api/courses/1/topics`. Use the IDs actually returned. The deterministic classifier currently recognizes predefined variants for exercise IDs 1 (Python) and 2 (Lithuanian).
-
-**3. Submit a recognized misconception.**
-
-```bash
-curl -i -X POST http://localhost:3001/api/attempts \
-  -H "Content-Type: application/json" \
-  -d '{"learner_id":1,"exercise_id":1,"submitted_answer":"python automatically converts strings to integers"}'
-```
-
-If learner 1, exercise 1, its answer rule and an active recommendation rule exist, the server returns **201**. The response includes `assessment_status: "incorrect"`, `attempt_id`, and a `recommendation` with `recommendation_id`, `topic_title`, `explanation` and `learner_decision: "pending"`. Save the returned recommendation ID.
-
-**4. Accept the recommendation.** Replace `8` with the ID returned in step 3.
-
-```bash
-curl -i -X PATCH http://localhost:3001/api/recommendations/8/decision \
-  -H "Content-Type: application/json" \
-  -d '{"decision":"accepted"}'
-```
-
-Expected successful response shape:
+An answer such as `Something unrelated` for either seeded exercise returns HTTP 422:
 
 ```json
 {
-  "status":"ok",
-  "message":"Learner decision saved successfully",
-  "recommendation":{"recommendation_id":"8","attempt_id":"13","learner_decision":"accepted"}
+  "status": "uncertain",
+  "assessment_status": "uncertain",
+  "message": "The submitted answer cannot be classified with sufficient confidence",
+  "recommendation": null
 }
 ```
 
-A second decision attempt for the same recommendation returns **409** with `{"status":"error","message":"Recommendation has already been decided"}`.
+## Error handling and recovery
 
-**5. Check an uncertain answer.**
+| Operation | Current response | Client action |
+| --- | --- | --- |
+| Health | 500 `Database connection failed` | Check database availability and backend configuration before retrying. |
+| Courses | 500 `Failed to fetch courses` | Retry the read with bounded backoff for transient failures. |
+| Course topics or exercises | 400 invalid course ID, 404 course missing, or 500 fetch failure | Validate ID format, refresh the course list on 404, or retry a transient 500 with bounded backoff. A 200 with an empty list is valid. |
+| Submit attempt | 400 invalid body fields, or 404 learner or active exercise missing | Correct the payload, verify the local learner, or refresh the active exercise list. |
+| Submit attempt | 422 with `status: "uncertain"` | Give the learner a chance to revise the answer. The transaction rolls back. |
+| Submit attempt | 422 with `status: "error"` for a missing answer rule, error category or active recommendation rule | Report a configuration problem to the maintainer. Wait for the configuration to be corrected before resubmitting. An attempt inserted before recommendation lookup is rolled back. |
+| Submit attempt | 500 database connection or attempt processing failure | Investigate database health. The handler attempts rollback for processing exceptions and releases the connection. A timeout or connection loss leaves the client unsure whether a commit happened. |
+| Save decision | 400 invalid ID or decision, 404 recommendation missing, or 409 already decided | Correct the request, verify the ID, or stop submitting changes on conflict. A 409 does not tell the client which decision won. |
+| Save decision | 500 `Failed to save learner decision` | Investigate database health. The conditional update permits only one successful transition. A retry after an ambiguous failure may return 409. |
 
-```bash
-curl -i -X POST http://localhost:3001/api/attempts \
-  -H "Content-Type: application/json" \
-  -d '{"learner_id":1,"exercise_id":1,"submitted_answer":"Something unrelated"}'
+A POST has no idempotency key or duplicate detection. Disable repeated submissions while a request is in flight and avoid automatic POST retries after timeouts or uncertain delivery. The API has no attempt or recommendation lookup route for reconciling an ambiguous write. Handler errors generally return `status` and `message`, without a machine-readable error code or correlation ID. Express middleware can reject malformed JSON or an oversized body before the handler runs and return its default error format. Parse the response based on its content type.
+
+Future recovery improvements could add idempotency keys, stable error codes, correlation IDs and an authorized lookup for reconciling writes.
+
+## Swagger Editor
+
+Import `docs/api/openapi.json` through **File → Import File** in [Swagger Editor](https://editor.swagger.io/) to inspect operations, response variants and request examples. The specification points to `http://localhost:3001`. Hosted Swagger Editor can inspect the file, but its browser origin is outside the current API's CORS configuration for live requests. Use PowerShell or curl for live calls with the standard local setup.
+
+## Maintaining the contract
+
+Treat [OpenAPI](openapi.json) as the API contract. When changing a route, database serialization or frontend integration, the PR author checks the corresponding request validation, response shape, status codes and client assumptions against the spec. Update the spec, affected examples and changelog in the same PR when the contract changes. Use the [version policy](CHANGELOG.md) to review compatibility.
+
+Reviewers should compare the diff with the routes, schema, reference data and frontend call sites. Verify that example answers match the classifier and expected rules. Run the [CI workflow](../../.github/workflows/ci.yml) checks locally and require the PR checks to pass before merging.
+
+```sh
+npx --yes @apidevtools/swagger-cli@4.0.4 validate docs/api/openapi.json
+npm run test
+npm run lint
+npm run build
 ```
 
-The current classifier returns **422** with `status: "uncertain"` and `recommendation: null`; no attempt is committed.
-
-## Error handling
-
-- **400** — invalid path ID, request IDs, decision or answer text.
-- **404** — missing course, learner, active exercise or recommendation.
-- **409** — a recommendation already has a recorded decision.
-- **422** — unclassifiable answer or missing configured assessment/recommendation rule.
-- **500** — database or internal processing failure.
-
-See `openapi.json` for endpoint-specific response messages and schemas. There is no universal error-code field or request correlation ID in the current implementation.
-
-## API documentation validation
-
-The specification is OpenAPI **3.0.3 JSON** and can be imported into Swagger Editor or another OpenAPI validator. CI runs a dedicated OpenAPI validator against the JSON file. A useful local structural check is:
-
-```bash
-node -e "const s=require('./docs/api/openapi.json'); if(s.openapi!=='3.0.3'||Object.keys(s.paths).length!==6)process.exit(1); console.log('OpenAPI JSON parsed; six paths present')"
-```
-
-This only checks JSON parsing and path count. **It is not full OpenAPI schema validation.** Run `npx --yes @apidevtools/swagger-cli@4.0.4 validate docs/api/openapi.json` locally to perform dedicated OpenAPI validation. Runtime HTTP checks still require a running PostgreSQL database.
-
-## Current implementation limitations
-
-- The backend has **no authentication or authorization**; `learner_id` is caller-supplied. This is a demo contract, not a secure multi-user API.
-- Assessment is deterministic and limited to hard-coded approved patterns for two exercise IDs; arbitrary natural-language answers may return 422 uncertain.
-- Recommendation explanations currently use the stored expected answer, **not an external LLM**.
-- The frontend currently uses learner ID 1.
-- CORS currently allows `http://localhost:5173`.
-- A successful local smoke test, deployed service and OpenAPI validation are **not claimed** by this documentation alone.
+CI validates OpenAPI structure and runs unit tests, lint and build. For contract verification, also run HTTP checks against a fresh local PostgreSQL database after route, schema or reference data changes. Compare actual JSON shapes, ID types and status codes against OpenAPI, including success, uncertainty, rule failure and repeated decisions. The existing CI job does not provision PostgreSQL or execute those HTTP checks.

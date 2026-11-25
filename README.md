@@ -6,6 +6,7 @@
 
 - [API documentation and integration tutorial](docs/api/README.md)
 - [OpenAPI 3.0.3 contract](docs/api/openapi.json)
+- [Current architecture and request sequences](docs/api/ARCHITECTURE.md)
 - Backend routes: `server/index.ts`; deterministic classifier: `server/assessment.ts`
 - Database migration: `database/migrations/001_initial_schema.sql`; reference seed: `database/seeds/001_reference_data.sql`
 

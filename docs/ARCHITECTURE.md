@@ -1,5 +1,7 @@
 # System Architecture — Learning Path Assistant
 
+> Archived architecture for the October 2026 browser-only prototype. See the [current database-backed architecture](api/ARCHITECTURE.md).
+
 ## 1. Overview
 
 Learning Path Assistant is a React-based educational recommendation prototype that helps students choose their next JavaScript learning topic.

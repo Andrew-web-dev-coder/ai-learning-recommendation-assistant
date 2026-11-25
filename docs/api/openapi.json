@@ -3,7 +3,7 @@
   "info": {
     "title": "AI Learning Recommendation Assistant API",
     "version": "0.1.0",
-    "description": "Code-aligned REST API contract for the database-backed educational MVP. IDs returned from PostgreSQL BIGINT columns are JSON strings; request learner_id and exercise_id are positive safe JSON integers. No authentication is implemented in the current MVP. This document does not claim deployed production readiness."
+    "description": "REST API for the database-backed educational MVP. PostgreSQL BIGINT response IDs are decimal strings. Attempt request IDs are positive JSON safe integers. The API has no authentication or authorization. JSON response schemas describe route-handler responses. Express JSON parsing can reject a request before it reaches a handler (for example, malformed JSON or a body above the default parser limit)."
   },
   "servers": [
     {
@@ -28,6 +28,7 @@
   "paths": {
     "/api/health": {
       "get": {
+        "operationId": "getDatabaseHealth",
         "tags": [
           "Health"
         ],
@@ -67,10 +68,12 @@
     },
     "/api/courses": {
       "get": {
+        "operationId": "listCourses",
         "tags": [
           "Courses"
         ],
         "summary": "List courses",
+        "description": "Returns all courses ordered by title.",
         "responses": {
           "200": {
             "description": "Available courses",
@@ -111,10 +114,12 @@
     },
     "/api/courses/{courseId}/topics": {
       "get": {
+        "operationId": "listCourseTopics",
         "tags": [
           "Courses"
         ],
         "summary": "List ordered topics for a course",
+        "description": "Returns topics ordered by position and then topic ID. An existing course can have an empty topics list.",
         "parameters": [
           {
             "name": "courseId",
@@ -123,9 +128,10 @@
             "schema": {
               "type": "string",
               "pattern": "^[1-9][0-9]*$",
-              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string",
+              "maxLength": 19
             },
-            "description": "Positive PostgreSQL BIGINT ID"
+            "description": "Positive decimal PostgreSQL BIGINT up to 9223372036854775807, with no sign or leading zeroes."
           }
         ],
         "responses": {
@@ -197,10 +203,12 @@
     },
     "/api/courses/{courseId}/exercises": {
       "get": {
+        "operationId": "listActiveCourseExercises",
         "tags": [
           "Courses"
         ],
         "summary": "List active diagnostic exercises for a course",
+        "description": "Returns active exercises ordered by topic position and then exercise ID. An existing course can have an empty exercises list.",
         "parameters": [
           {
             "name": "courseId",
@@ -209,9 +217,10 @@
             "schema": {
               "type": "string",
               "pattern": "^[1-9][0-9]*$",
-              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string",
+              "maxLength": 19
             },
-            "description": "Positive PostgreSQL BIGINT ID"
+            "description": "Positive decimal PostgreSQL BIGINT up to 9223372036854775807, with no sign or leading zeroes."
           }
         ],
         "responses": {
@@ -285,11 +294,12 @@
     },
     "/api/attempts": {
       "post": {
+        "operationId": "submitDiagnosticAttempt",
         "tags": [
           "Assessment"
         ],
         "summary": "Assess an answer and create an attempt and optional recommendation",
-        "description": "Assessment currently recognizes only predefined answer variants for exercise IDs 1 and 2. Unknown answers return 422 uncertain without saving an attempt. For recognized incorrect answers an active recommendation rule is required; otherwise transaction is rolled back.",
+        "description": "Assessment matches predefined variants for exercise IDs 1 (Python) and 2 (Lithuanian). A correct answer saves an attempt with no recommendation. An incorrect answer saves the attempt and pending recommendation together. An uncertain result or missing required rule configuration returns 422 and rolls back the transaction.",
         "requestBody": {
           "required": true,
           "content": {
@@ -297,13 +307,43 @@
               "schema": {
                 "$ref": "#/components/schemas/AttemptRequest"
               },
-              "example": {
-                "learner_id": 1,
-                "exercise_id": 1,
-                "submitted_answer": "python automatically converts strings to integers"
+              "examples": {
+                "pythonCorrect": {
+                  "summary": "Python correct answer",
+                  "value": {
+                    "learner_id": 1,
+                    "exercise_id": 1,
+                    "submitted_answer": "i need to convert the string into an integer"
+                  }
+                },
+                "pythonMisconception": {
+                  "summary": "Python misconception → Type Conversion",
+                  "value": {
+                    "learner_id": 1,
+                    "exercise_id": 1,
+                    "submitted_answer": "python automatically converts strings to integers"
+                  }
+                },
+                "lithuanianCorrect": {
+                  "summary": "Lithuanian correct answer",
+                  "value": {
+                    "learner_id": 1,
+                    "exercise_id": 2,
+                    "submitted_answer": "aš einu į mokyklą"
+                  }
+                },
+                "lithuanianMisconception": {
+                  "summary": "Lithuanian misconception → Accusative Case",
+                  "value": {
+                    "learner_id": 1,
+                    "exercise_id": 2,
+                    "submitted_answer": "mokykla is correct"
+                  }
+                }
               }
             }
-          }
+          },
+          "description": "Examples assume a freshly initialized reference database. Look up the learner ID and verify the seeded prompts and classifier IDs before using them."
         },
         "responses": {
           "201": {
@@ -439,15 +479,25 @@
             }
           },
           "500": {
-            "description": "Failed to process attempt",
+            "description": "Database connection could not be acquired or attempt processing failed",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 },
-                "example": {
-                  "status": "error",
-                  "message": "Failed to process attempt"
+                "examples": {
+                  "connection": {
+                    "value": {
+                      "status": "error",
+                      "message": "Database connection failed"
+                    }
+                  },
+                  "processing": {
+                    "value": {
+                      "status": "error",
+                      "message": "Failed to process attempt"
+                    }
+                  }
                 }
               }
             }
@@ -457,11 +507,12 @@
     },
     "/api/recommendations/{recommendationId}/decision": {
       "patch": {
+        "operationId": "saveRecommendationDecision",
         "tags": [
           "Recommendations"
         ],
         "summary": "Accept or reject a pending recommendation",
-        "description": "A decision is allowed only once. Repeating a decision for the same recommendation returns 409.",
+        "description": "Updates an existing recommendation only while its decision is pending. Any subsequent decision on that recommendation returns 409.",
         "parameters": [
           {
             "name": "recommendationId",
@@ -470,9 +521,10 @@
             "schema": {
               "type": "string",
               "pattern": "^[1-9][0-9]*$",
-              "description": "PostgreSQL BIGINT identifier serialized as a decimal string"
+              "description": "PostgreSQL BIGINT identifier serialized as a decimal string",
+              "maxLength": 19
             },
-            "description": "Positive PostgreSQL BIGINT ID"
+            "description": "Positive decimal PostgreSQL BIGINT up to 9223372036854775807, with no sign or leading zeroes."
           }
         ],
         "requestBody": {
@@ -785,18 +837,21 @@
           "learner_id": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 9007199254740991
+            "maximum": 9007199254740991,
+            "description": "Caller-supplied ID of an existing learner. Send as a JSON number."
           },
           "exercise_id": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 9007199254740991
+            "maximum": 9007199254740991,
+            "description": "ID of an active exercise. Send as a JSON number. Classification patterns are keyed by exercise ID."
           },
           "submitted_answer": {
             "type": "string",
             "minLength": 1,
             "maxLength": 5000,
-            "description": "Must contain non-whitespace text"
+            "description": "Must contain non-whitespace text. Express checks the original string length in JavaScript UTF-16 code units (maximum 5000). The original text is stored when the attempt commits.",
+            "pattern": "\\S"
           }
         }
       },
@@ -831,15 +886,14 @@
           },
           "explanation": {
             "type": "string",
-            "description": "Currently sourced from the approved expected_answer field, not generated by an LLM."
+            "description": "Stored expected_answer from the selected assessment rule."
           },
           "learner_decision": {
             "type": "string",
             "enum": [
-              "pending",
-              "accepted",
-              "rejected"
-            ]
+              "pending"
+            ],
+            "description": "Initial decision returned when the recommendation is created."
           }
         }
       },
