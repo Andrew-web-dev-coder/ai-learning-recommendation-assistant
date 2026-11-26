@@ -10,7 +10,7 @@ body {
 }
 
 button,
-select {
+textarea {
   font: inherit;
 }
 
@@ -41,9 +41,7 @@ h2 {
   margin-top: 0;
 }
 
-.header p,
-.hint,
-.topic-row p {
+.hint {
   color: #69758a;
 }
 
@@ -55,27 +53,18 @@ h2 {
   box-shadow: 0 8px 32px rgba(20, 40, 90, 0.05);
 }
 
-select {
+textarea {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
   padding: 12px;
   border: 1px solid #dce2ee;
-  border-radius: 10px;
-  background: white;
-  min-width: 180px;
-  max-width: 100%;
+  border-radius: 8px;
 }
 
-.topic-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 0;
-  border-bottom: 1px solid #edf0f6;
-}
-
-.topic-row p {
-  font-size: 14px;
-  margin: 6px 0 0;
+.prompt {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .primary-button,
@@ -103,13 +92,9 @@ select {
   border: 1px solid #cfd7ff;
 }
 
-.recommendation a {
-  color: #4f5ed7;
-  font-weight: 600;
-}
-
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -126,11 +111,6 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .topic-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .panel {
     padding: 20px;
   }
