@@ -4,6 +4,8 @@
 
 ## Start here
 
+- [Frontend architecture, routes, and hosting](docs/frontend/ARCHITECTURE.md)
+- [FE-00 frontend baseline audit](docs/frontend/BASELINE_AUDIT.md)
 - [API documentation and integration tutorial](docs/api/README.md)
 - [OpenAPI 3.0.3 contract](docs/api/openapi.json)
 - [Current architecture and request sequences](docs/api/ARCHITECTURE.md)
