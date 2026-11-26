@@ -85,53 +85,70 @@ Local verification on 2026-11-26 used Node 24.22.3, npm 11.19.1, PostgreSQL 17.1
 
 `npm ci`, ESLint, the production TypeScript/Vite build and OpenAPI validation with swagger-cli 4.0.4 passed. Validation also passed for 117 local Markdown link targets and applicable anchors in this guide and README, the Mermaid diagram rendered to SVG, and `git diff --check` passed.
 
+## FE-05 verification
+
+Node 24.22.3, PostgreSQL 17.12 and Playwright 1.65.1 with its pinned Chromium verified the production-build test setup. The FE-04 tests and assertions remain in the suite.
+
+| Suite | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Vitest | 77 | 0 | 0 |
+| Live HTTP contract and schema examples | 20 | 0 | 0 |
+| Playwright desktop Chromium | 18 | 0 | 0 |
+| Playwright mobile Chromium | 18 | 0 | 0 |
+
+This is 133 passing test executions, including all 120 baseline executions. Four Playwright tests performed 32 axe scans with zero violations. The other eight new browser executions cover theme persistence and restricted storage, keyboard focus and validation, and responsive reflow. [Verification methods and screenshots](ACCESSIBILITY.md) · [Design, tooling and bundle sizes](DESIGN_SYSTEM.md)
+
 ## Exact Stage 3 rubric mapping
 
-The requirement column reproduces FE-00 wording. Earlier FE-01–FE-03 evidence remains linked where FE-04 provides corroboration or where a criterion lies outside browser automation. [FE-00 criteria](BASELINE_AUDIT.md#minimum-rubric-traceability)
+The requirement column reproduces all 33 FE-00 criteria. Verified means the cited repository or test evidence demonstrates the stated requirement. Partially verified means a named portion still needs evidence or reviewer judgment. Unverified marks work without the required measurement. These are project evidence statuses. [FE-00 criteria](BASELINE_AUDIT.md#minimum-rubric-traceability)
 
-| ID | Requirement | Evidence and limits |
+| ID | Requirement | Status | Evidence and limits |
+| --- | --- | --- | --- |
+| D1 | Frontend architecture diagram covering modules, components, routes and state | Verified | [Architecture diagrams](ARCHITECTURE.md) and the [test topology](#test-layers). |
+| D2 | Architecture approach description | Verified | [Architecture](ARCHITECTURE.md) and [state ownership](STATE_MANAGEMENT.md). |
+| D3 | API schemas, methods and request/response examples | Verified | [OpenAPI](../api/openapi.json), [API walkthrough](../api/README.md) and [live contract tests](../../tests/api.contract.mjs). |
+| D4 | User flow and navigation diagrams | Verified | [Route and navigation diagram](ARCHITECTURE.md#routes-and-navigation) and [browser navigation cases](../../tests/e2e/navigation.e2e.mjs). |
+| D5 | Technology stack justification | Verified | [Frontend stack rationale](ARCHITECTURE.md#stack-and-module-boundaries) and [test-layer responsibilities](#test-layers). |
+| A1 | Modern SPA framework | Verified | [React entry point](../../src/main.tsx), exercised through its built assets. |
+| A2 | Components, pages, services and hooks separated | Verified | [Module boundaries](ARCHITECTURE.md#stack-and-module-boundaries). |
+| A3 | At least 3–4 routes | Verified | [Route tree](../../src/app/routes.tsx) and [deep links, invalid IDs, and Not Found recover without writes](../../tests/e2e/navigation.e2e.mjs). |
+| A4 | Local and global state, or justified absence of global state | Verified | [State ownership](STATE_MANAGEMENT.md#store-and-ownership) and the [delayed POST](../../tests/e2e/recovery.e2e.mjs) and [refresh recovery](../../tests/e2e/navigation.e2e.mjs) cases. |
+| A5 | Clear project structure | Verified | [Frontend module structure](ARCHITECTURE.md#stack-and-module-boundaries). |
+| A6 | Real API or mock integration | Verified | [Both live browser journeys](../../tests/e2e/learning.e2e.mjs) and the [HTTP contract suite](../../tests/api.contract.mjs). |
+| A7 | Typed data interfaces | Verified | [Typed RTK Query service](../../src/features/learning/api.ts) and [OpenAPI](../api/openapi.json). |
+| A8 | Centralized request handling | Verified | [RTK Query service](../../src/features/learning/api.ts) and [request-count browser assertions](../../tests/e2e/navigation.e2e.mjs). |
+| A9 | Loading and error states | Verified | [Loading, retry and mutation recovery](../../tests/e2e/recovery.e2e.mjs). |
+| I1 | Modern bundler | Verified | [Vite config](../../vite.config.ts) and the production build in [CI](../../.github/workflows/ci.yml). |
+| I2 | Component-based UI | Verified | [UI requirements](UI_REQUIREMENTS.md) and [component tests](../../src/features/learning/uiRequirements.test.tsx). |
+| I3 | Reusable components | Verified | [Shared components](../../src/shared) and [UI requirements](UI_REQUIREMENTS.md). |
+| I4 | Layout components | Verified | [Shared shell](../../src/app/AppShell.tsx). |
+| I5 | UI library or custom UI components | Verified | [Custom UI components](../../src/shared) and [recommendation card](../../src/features/learning/RecommendationCard.tsx). |
+| I6 | Controlled forms and validation | Verified | [Answer form](../../src/features/learning/AnswerForm.tsx), [validation boundary tests](../../src/features/learning/uiRequirements.test.tsx) and [both learner journeys](../../tests/e2e/learning.e2e.mjs). |
+| I7 | Data tables or lists | Verified | [Course lists](../../src/pages/CoursePage.tsx) and [both learner journeys](../../tests/e2e/learning.e2e.mjs). |
+| I8 | Filtering, searching or sorting | Verified | [Catalog search and route navigation reuse fresh GET cache entries](../../tests/e2e/navigation.e2e.mjs). |
+| I9 | Desktop and mobile responsiveness | Verified | [Five viewport widths, 200% root text and Chromium page zoom](ACCESSIBILITY.md), plus both Chromium browser projects. |
+| I10 | Clean/readable code | Partially verified | [Frontend module structure](ARCHITECTURE.md#stack-and-module-boundaries) and passing ESLint. Readability remains subject to review. |
+| I11 | ESLint and Prettier or equivalent formatter | Verified | [ESLint config](../../eslint.config.js), [scoped Prettier configuration and commands](DESIGN_SYSTEM.md#formatting-and-logging) and [CI](../../.github/workflows/ci.yml). |
+| I12 | Basic frontend logging | Verified | [Structured development logging](../../src/app/frontendLogging.ts) and [its verification](../../src/app/frontendLogging.test.ts). |
+| E1 | Global handler or Error Boundary | Verified | [Router boundary](../../src/app/RouteError.tsx). |
+| E2 | Clear user-facing errors | Verified | [Browser recovery cases](../../tests/e2e/recovery.e2e.mjs) for read and write feedback. |
+| E3 | Correct HTTP 401/403/404/500 handling | Partially verified | [Error normalization](../../src/features/learning/learning.integration.test.ts) covers 401/403 with synthetic inputs. Browser evidence includes live 404 and injected 500. The current API has no authentication paths. |
+| E4 | Loading for all async operations | Partially verified | [Exercise loading](../../tests/e2e/navigation.e2e.mjs) and [pending catalog, POST and PATCH](../../tests/e2e/recovery.e2e.mjs). The [course loading branch](../../src/pages/CoursePage.tsx) has implementation evidence. |
+| T1 | Unit tests for at least three key current frontend units | Verified | [UI unit tests](../../src/features/learning/uiRequirements.test.tsx) for search and form validation, [route/ID tests](../../src/app/routes.test.ts) and [error normalization tests](../../src/features/learning/learning.integration.test.ts). |
+| T2 | At least 1–2 frontend integration or E2E tests | Verified | [Live learner journeys](../../tests/e2e/learning.e2e.mjs), [navigation](../../tests/e2e/navigation.e2e.mjs) and [recovery](../../tests/e2e/recovery.e2e.mjs). |
+| T3 | Tests for forms, state or client-side API | Verified | [Form component tests](../../src/features/learning/uiRequirements.test.tsx), [store/transport tests](../../src/features/learning/learning.integration.test.ts) and [browser journeys](../../tests/e2e/learning.e2e.mjs). |
+
+| Advanced direction | Status | Related evidence |
 | --- | --- | --- |
-| D1 | Frontend architecture diagram covering modules, components, routes and state | [Architecture diagrams](ARCHITECTURE.md) and the [test topology](#test-layers). |
-| D2 | Architecture approach description | [Architecture](ARCHITECTURE.md) and [state ownership](STATE_MANAGEMENT.md). |
-| D3 | API schemas, methods and request/response examples | [OpenAPI](../api/openapi.json), [API walkthrough](../api/README.md) and [live contract tests](../../tests/api.contract.mjs). |
-| D4 | User flow and navigation diagrams | [Route and navigation diagram](ARCHITECTURE.md#routes-and-navigation) and [browser navigation cases](../../tests/e2e/navigation.e2e.mjs). |
-| D5 | Technology stack justification | [Frontend stack rationale](ARCHITECTURE.md#stack-and-module-boundaries) and [test-layer responsibilities](#test-layers). |
-| A1 | Modern SPA framework | [React entry point](../../src/main.tsx), exercised through its built assets. |
-| A2 | Components, pages, services and hooks separated | [Module boundaries](ARCHITECTURE.md#stack-and-module-boundaries). |
-| A3 | At least 3–4 routes | [Route tree](../../src/app/routes.tsx) and [deep links, invalid IDs, and Not Found recover without writes](../../tests/e2e/navigation.e2e.mjs). |
-| A4 | Local and global state, or justified absence of global state | [State ownership](STATE_MANAGEMENT.md#store-and-ownership) and the [delayed POST](../../tests/e2e/recovery.e2e.mjs) and [refresh recovery](../../tests/e2e/navigation.e2e.mjs) cases. |
-| A5 | Clear project structure | [Frontend module structure](ARCHITECTURE.md#stack-and-module-boundaries). |
-| A6 | Real API or mock integration | [Both live browser journeys](../../tests/e2e/learning.e2e.mjs) and the [HTTP contract suite](../../tests/api.contract.mjs). |
-| A7 | Typed data interfaces | [Typed RTK Query service](../../src/features/learning/api.ts) and [OpenAPI](../api/openapi.json). |
-| A8 | Centralized request handling | [RTK Query service](../../src/features/learning/api.ts) and [request-count browser assertions](../../tests/e2e/navigation.e2e.mjs). |
-| A9 | Loading and error states | [Loading, retry and mutation recovery](../../tests/e2e/recovery.e2e.mjs). |
-| I1 | Modern bundler | [Vite config](../../vite.config.ts) and the production build in [CI](../../.github/workflows/ci.yml). |
-| I2 | Component-based UI | [UI requirements](UI_REQUIREMENTS.md) and [component tests](../../src/features/learning/uiRequirements.test.tsx). |
-| I3 | Reusable components | [Shared components](../../src/shared) and [UI requirements](UI_REQUIREMENTS.md). |
-| I4 | Layout components | [Shared shell](../../src/app/AppShell.tsx). |
-| I5 | UI library or custom UI components | [Custom UI components](../../src/shared) and [recommendation card](../../src/features/learning/RecommendationCard.tsx). |
-| I6 | Controlled forms and validation | [Answer form](../../src/features/learning/AnswerForm.tsx), [validation boundary tests](../../src/features/learning/uiRequirements.test.tsx) and [both learner journeys](../../tests/e2e/learning.e2e.mjs). |
-| I7 | Data tables or lists | [Course lists](../../src/pages/CoursePage.tsx) and [both learner journeys](../../tests/e2e/learning.e2e.mjs). |
-| I8 | Filtering, searching or sorting | [Catalog search and route navigation reuse fresh GET cache entries](../../tests/e2e/navigation.e2e.mjs). |
-| I9 | Desktop and mobile responsiveness | [Chromium viewport projects](../../playwright.config.mjs) and [diagnostic overflow assertions](../../tests/e2e/learning.e2e.mjs). |
-| I10 | Clean/readable code | [Frontend module structure](ARCHITECTURE.md#stack-and-module-boundaries) and passing ESLint. Readability remains subject to review. |
-| I11 | ESLint and Prettier or equivalent formatter | [ESLint config](../../eslint.config.js) and [CI](../../.github/workflows/ci.yml). The formatter portion remains open. |
-| I12 | Basic frontend logging | A frontend logger remains open. [FE-03 remaining criteria](UI_REQUIREMENTS.md) |
-| E1 | Global handler or Error Boundary | [Router boundary](../../src/app/RouteError.tsx). |
-| E2 | Clear user-facing errors | [Browser recovery cases](../../tests/e2e/recovery.e2e.mjs) for read and write feedback. |
-| E3 | Correct HTTP 401/403/404/500 handling | [Error normalization](../../src/features/learning/learning.integration.test.ts) covers 401/403 with synthetic inputs. Browser evidence includes live 404 and injected 500. The current API has no authentication paths. |
-| E4 | Loading for all async operations | [Exercise loading](../../tests/e2e/navigation.e2e.mjs) and [pending catalog, POST and PATCH](../../tests/e2e/recovery.e2e.mjs). The [course loading branch](../../src/pages/CoursePage.tsx) has implementation evidence. |
-| T1 | Unit tests for at least three key current frontend units | [UI unit tests](../../src/features/learning/uiRequirements.test.tsx) for search and form validation, [route/ID tests](../../src/app/routes.test.ts) and [error normalization tests](../../src/features/learning/learning.integration.test.ts). |
-| T2 | At least 1–2 frontend integration or E2E tests | [Live learner journeys](../../tests/e2e/learning.e2e.mjs), [navigation](../../tests/e2e/navigation.e2e.mjs) and [recovery](../../tests/e2e/recovery.e2e.mjs). |
-| T3 | Tests for forms, state or client-side API | [Form component tests](../../src/features/learning/uiRequirements.test.tsx), [store/transport tests](../../src/features/learning/learning.integration.test.ts) and [browser journeys](../../tests/e2e/learning.e2e.mjs). |
+| Advanced Architecture | Verified | [Module and navigation diagrams](ARCHITECTURE.md) and [direct browser route verification](../../tests/e2e/navigation.e2e.mjs). |
+| Advanced State Management | Verified | [Store and ownership](STATE_MANAGEMENT.md), [request reuse and late reads](../../tests/e2e/navigation.e2e.mjs), and [late writes and ambiguous outcomes](../../tests/e2e/recovery.e2e.mjs). |
+| Performance | Unverified | [Cache request counts](../../tests/e2e/navigation.e2e.mjs) provide bounded network-behavior evidence. Browser timings, transfer budgets and profiling remain FE-06 work. |
+| Advanced UI/UX | Partially verified | [Design tokens and themes](DESIGN_SYSTEM.md) and [keyboard, reflow, page zoom and automated accessibility checks](ACCESSIBILITY.md). Screen-reader output and full WCAG evaluation remain unverified. |
 
-| Advanced direction | Related evidence |
-| --- | --- |
-| Advanced Architecture | [Module and navigation diagrams](ARCHITECTURE.md) and [direct browser route verification](../../tests/e2e/navigation.e2e.mjs). |
-| Advanced State Management | [Store and ownership](STATE_MANAGEMENT.md), [request reuse and late reads](../../tests/e2e/navigation.e2e.mjs), and [late writes and ambiguous outcomes](../../tests/e2e/recovery.e2e.mjs). |
-| Performance | [Cache request counts](../../tests/e2e/navigation.e2e.mjs) provide bounded network-behavior evidence. Browser timings, transfer budgets and profiling remain FE-06 work. |
-| Advanced UI/UX | [UI requirements](UI_REQUIREMENTS.md) and [desktop/mobile learner journeys](../../tests/e2e/learning.e2e.mjs) verify selected interactions. Theme, zoom, contrast and broader accessibility verification remain FE-05 work. |
-
-## Remaining limits and FE-05 handoff
+## FE-04 handoff record
 
 Coverage uses two synthetic diagnostic seeds, desktop Chromium, and a Pixel 7 emulation profile. Physical devices, other browser engines, broader viewport coverage, and educational effectiveness remain unmeasured. The accessibility assertions cover specific labels, validation and focus behavior. FE-05 can reuse the semantic locators and viewport projects to add keyboard navigation, focus and announcement checks, light/dark theme interactions, zoom and reflow, and contrast evidence. Performance measurement stays with FE-06.
+
+## FE-06 handoff
+
+Use the FE-05 asset-size comparison and FE-04 cache and request-count tests as starting evidence. Establish reproducible browser conditions and performance budgets, measure timings, then prioritize optimization from the measurements. [Bundle baseline](DESIGN_SYSTEM.md#production-bundle) · [Accessibility limits](ACCESSIBILITY.md#limits)

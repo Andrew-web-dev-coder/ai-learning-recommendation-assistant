@@ -26,7 +26,9 @@ export function AnswerForm({ exercise }: { exercise: Exercise }) {
 
   useLayoutEffect(() => {
     active.current = navigationState === 'idle'
-    return () => { active.current = false }
+    return () => {
+      active.current = false
+    }
   }, [navigationState])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,16 +46,24 @@ export function AnswerForm({ exercise }: { exercise: Exercise }) {
 
   return (
     <section className="panel">
-      <h2>Diagnostic exercise</h2>
-      <p id="exercise-prompt" className="prompt">{exercise.prompt}</p>
+      <h1>Diagnostic exercise</h1>
+      <p id="exercise-prompt" className="prompt">
+        {exercise.prompt}
+      </p>
       {isAttemptExerciseId(scope.exerciseId) ? (
         <form noValidate onSubmit={(event) => void handleSubmit(event)}>
           <label htmlFor="answer">Your answer (required)</label>
-          <p className="hint" id="answer-instructions">Follow the prompt above. Use up to 5,000 characters.</p>
+          <p className="hint" id="answer-instructions">
+            Follow the prompt above. Use up to 5,000 characters.
+          </p>
           <textarea
             ref={answerInput}
             id="answer"
-            aria-describedby={validation ? 'exercise-prompt answer-instructions answer-error' : 'exercise-prompt answer-instructions'}
+            aria-describedby={
+              validation
+                ? 'exercise-prompt answer-instructions answer-error'
+                : 'exercise-prompt answer-instructions'
+            }
             aria-invalid={validation ? true : undefined}
             value={answer}
             maxLength={maxAnswerLength}
@@ -71,19 +81,27 @@ export function AnswerForm({ exercise }: { exercise: Exercise }) {
           </Button>
           {submitting && <StatusMessage>Checking your answer…</StatusMessage>}
         </form>
-      ) : <ErrorMessage message="This exercise cannot be submitted." />}
+      ) : (
+        <ErrorMessage message="This exercise cannot be submitted." />
+      )}
       {workflow.status === 'failed' && <ErrorMessage message={workflow.error.message} />}
       {workflow.status === 'ambiguous' && (
         <ErrorMessage message="We could not confirm whether this answer was saved. Submission for this exercise is paused in this tab. You can return to the course and continue with another exercise." />
       )}
       {workflow.status === 'uncertain' && (
-        <div role="status">
-          <h3>Answer needs clarification</h3>
+        <div role="status" className="status-message status-message--warning">
+          <h2>Answer needs clarification</h2>
           <p>{workflow.error.message}</p>
         </div>
       )}
       {savingDecision && <StatusMessage>Saving your previous recommendation decision…</StatusMessage>}
-      {workflow.status === 'confirmed' && <p><Link to="result">View this session’s result</Link></p>}
+      {workflow.status === 'confirmed' && (
+        <p>
+          <Link className="back-link" to="result">
+            View this session’s result
+          </Link>
+        </p>
+      )}
     </section>
   )
 }

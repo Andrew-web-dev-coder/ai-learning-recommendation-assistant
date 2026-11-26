@@ -3,10 +3,14 @@ import { ErrorMessage } from '../shared/Status'
 
 export function RouteError() {
   return (
-    <main className="app">
-      <h1>Page unavailable</h1>
-      <ErrorMessage message="This page could not be displayed." />
-      <Link to="/courses">Back to courses</Link>
-    </main>
+    <div className="app">
+      <main>
+        <h1>Page unavailable</h1>
+        <ErrorMessage message="This page could not be displayed." />
+        <Link className="back-link" to="/courses">
+          Back to courses
+        </Link>
+      </main>
+    </div>
   )
 }

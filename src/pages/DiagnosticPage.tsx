@@ -12,12 +12,22 @@ export function Component() {
 
   return (
     <>
-      <p><Link to={`/courses/${courseId}`}>Back to course</Link></p>
-      {!currentData && isFetching ? <Loading message="Loading exercise…" /> : (
+      <p>
+        <Link className="back-link" to={`/courses/${courseId}`}>
+          Back to course
+        </Link>
+      </p>
+      {!currentData && isFetching ? (
+        <section className="panel">
+          <h1>Diagnostic exercise</h1>
+          <Loading message="Loading exercise…" />
+        </section>
+      ) : (
         <>
-          {currentData && (exercise
-            ? <AnswerForm exercise={exercise} />
-            : <ErrorMessage message="This exercise is unavailable for this course." />)}
+          {exercise ? <AnswerForm exercise={exercise} /> : <h1>Diagnostic exercise</h1>}
+          {currentData && !exercise && (
+            <ErrorMessage message="This exercise is unavailable for this course." />
+          )}
           <QueryFeedback isFetching={isFetching} error={error} onRefresh={() => void refetch()} />
         </>
       )}

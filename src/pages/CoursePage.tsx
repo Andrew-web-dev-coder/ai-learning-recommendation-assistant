@@ -1,5 +1,9 @@
 import { Link, useParams } from 'react-router'
-import { useGetCoursesQuery, useGetCourseTopicsQuery, useGetCourseExercisesQuery } from '../features/learning/api'
+import {
+  useGetCoursesQuery,
+  useGetCourseTopicsQuery,
+  useGetCourseExercisesQuery,
+} from '../features/learning/api'
 import { QueryFeedback } from '../features/learning/QueryFeedback'
 import { isPathId } from '../shared/ids'
 import { ErrorMessage, Loading } from '../shared/Status'
@@ -13,7 +17,12 @@ function Course({ courseId }: { courseId: string }) {
   const error = topics.error ?? exercises.error ?? catalog.error
 
   if (!error && queries.some((query) => query.isFetching && !query.currentData)) {
-    return <Loading message="Loading course…" />
+    return (
+      <section className="panel">
+        <h1>Course</h1>
+        <Loading message="Loading course…" />
+      </section>
+    )
   }
 
   function refresh() {
@@ -24,21 +33,27 @@ function Course({ courseId }: { courseId: string }) {
   const course = catalog.currentData?.courses.find((item) => item.course_id === courseId)
   return (
     <section className="panel">
-      <h2>{course?.title ?? 'Course'}</h2>
+      <h1>{course?.title ?? 'Course'}</h1>
       {!course && catalog.currentData && !error && <ErrorMessage message="Course not found." />}
       {topics.currentData && (
-        <>
-          <h3>Topics</h3>
+        <div className="course-section">
+          <h2>Topics</h2>
           {topics.currentData.topics.length ? (
-            <ol>{topics.currentData.topics.map((topic) => <li key={topic.topic_id}>{topic.title}</li>)}</ol>
-          ) : <p>No topics are available.</p>}
-        </>
+            <ol>
+              {topics.currentData.topics.map((topic) => (
+                <li key={topic.topic_id}>{topic.title}</li>
+              ))}
+            </ol>
+          ) : (
+            <p>No topics are available.</p>
+          )}
+        </div>
       )}
       {exercises.currentData && (
-        <>
-          <h3>Diagnostic exercises</h3>
+        <div className="course-section">
+          <h2>Diagnostic exercises</h2>
           {exercises.currentData.exercises.length ? (
-            <ul>
+            <ul className="exercise-list">
               {exercises.currentData.exercises.map((exercise) => (
                 <li key={exercise.exercise_id}>
                   <Link to={`exercises/${exercise.exercise_id}`}>Exercise {exercise.exercise_id}</Link>
@@ -46,8 +61,10 @@ function Course({ courseId }: { courseId: string }) {
                 </li>
               ))}
             </ul>
-          ) : <p>No active exercises are available for this course.</p>}
-        </>
+          ) : (
+            <p>No active exercises are available for this course.</p>
+          )}
+        </div>
       )}
       <QueryFeedback isFetching={fetching} error={error} onRefresh={refresh} />
     </section>
@@ -58,9 +75,19 @@ export function Component() {
   const { courseId } = useParams()
   return (
     <>
-      <p><Link to="/courses">Back to courses</Link></p>
-      {isPathId(courseId) ? <Course key={courseId} courseId={courseId} />
-        : <ErrorMessage message="Invalid course address." />}
+      <p>
+        <Link className="back-link" to="/courses">
+          Back to courses
+        </Link>
+      </p>
+      {isPathId(courseId) ? (
+        <Course key={courseId} courseId={courseId} />
+      ) : (
+        <section className="panel">
+          <h1>Course unavailable</h1>
+          <ErrorMessage message="Invalid course address." />
+        </section>
+      )}
     </>
   )
 }

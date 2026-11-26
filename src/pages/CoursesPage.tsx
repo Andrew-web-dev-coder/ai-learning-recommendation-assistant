@@ -8,8 +8,11 @@ export function Component() {
 
   return (
     <section className="panel">
-      <h2>Choose a course</h2>
-      {!currentData && !error && isFetching ? <Loading message="Loading courses…" /> : (
+      <h1>Choose a course</h1>
+      <p className="hint">Try a diagnostic exercise and get a suggested topic for your next step.</p>
+      {!currentData && !error && isFetching ? (
+        <Loading message="Loading courses…" />
+      ) : (
         <>
           {currentData && <CourseCatalog courses={currentData.courses} />}
           <QueryFeedback isFetching={isFetching} error={error} onRefresh={() => void refetch()} />

@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react'
 
-export function StatusMessage({ children }: { children: ReactNode }) {
-  return <p role="status" className="hint">{children}</p>
+export function StatusMessage({ children, tone }: { children: ReactNode; tone?: 'success' }) {
+  return (
+    <p role="status" className={tone ? `status-message status-message--${tone}` : 'status-message hint'}>
+      {children}
+    </p>
+  )
 }
 
 export function Loading({ message = 'Loading…' }: { message?: string }) {
@@ -9,5 +13,9 @@ export function Loading({ message = 'Loading…' }: { message?: string }) {
 }
 
 export function ErrorMessage({ message, id }: { message: string; id?: string }) {
-  return <p id={id} role="alert" className="error-message">{message}</p>
+  return (
+    <p id={id} role="alert" className="error-message">
+      {message}
+    </p>
+  )
 }

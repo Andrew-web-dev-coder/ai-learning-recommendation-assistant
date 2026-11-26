@@ -15,14 +15,19 @@ export function CourseCatalog({ courses }: { courses: readonly Course[] }) {
   return (
     <>
       <SearchInput label="Search by course title or code" value={search} onChange={setSearch} />
-      <StatusMessage>{count === 0 ? 'No courses match your search. Try another title or code, or clear the search.'
-        : `${count} ${count === 1 ? 'course' : 'courses'} shown.`}</StatusMessage>
+      <StatusMessage>
+        {count === 0
+          ? 'No courses match your search. Try another title or code, or clear the search.'
+          : `${count} ${count === 1 ? 'course' : 'courses'} shown.`}
+      </StatusMessage>
       {count > 0 && (
-        <ul className="catalog-list">
+        <ul className="catalog-list" role="list">
           {matches.map((course) => (
             <li key={course.course_id}>
-              <Link to={course.course_id}>{course.title}</Link>
-              <span className="hint">{course.course_code}</span>
+              <Link className="course-card" to={course.course_id} aria-label={course.title}>
+                <span>{course.title}</span>
+                <span className="hint">{course.course_code}</span>
+              </Link>
             </li>
           ))}
         </ul>

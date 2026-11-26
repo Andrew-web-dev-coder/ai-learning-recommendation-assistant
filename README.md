@@ -8,6 +8,8 @@
 - [Frontend state management, RTK Query, and recovery](docs/frontend/STATE_MANAGEMENT.md)
 - [Frontend UI requirements and verification](docs/frontend/UI_REQUIREMENTS.md)
 - [Frontend automated testing and rubric evidence](docs/frontend/TESTING.md)
+- [Frontend design system](docs/frontend/DESIGN_SYSTEM.md)
+- [Frontend accessibility and responsive verification](docs/frontend/ACCESSIBILITY.md)
 - [FE-00 frontend baseline audit](docs/frontend/BASELINE_AUDIT.md)
 - [API documentation and integration tutorial](docs/api/README.md)
 - [OpenAPI 3.0.3 contract](docs/api/openapi.json)
