@@ -6,7 +6,10 @@ import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { routes } from './app/routes'
 import { createAppStore } from './app/store'
+import { initializeTheme } from './app/theme'
 import './index.css'
+
+initializeTheme()
 
 const router = createBrowserRouter(routes)
 const store = createAppStore()

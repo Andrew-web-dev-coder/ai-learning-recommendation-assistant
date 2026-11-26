@@ -2,7 +2,11 @@ import { Button } from '../../shared/Button'
 import { ErrorMessage, Loading } from '../../shared/Status'
 import { queryErrorMessage } from './apiErrors'
 
-export function QueryFeedback({ isFetching, error, onRefresh }: {
+export function QueryFeedback({
+  isFetching,
+  error,
+  onRefresh,
+}: {
   isFetching: boolean
   error: unknown
   onRefresh: () => void

@@ -27,7 +27,8 @@ describe('learning routes', () => {
 
 describe('route and submission identifiers', () => {
   it.each([undefined, '0', '01', '-1', '1\n', '1/2', '9223372036854775808'])(
-    'rejects invalid route ID %s', (value) => expect(isPathId(value)).toBe(false),
+    'rejects invalid route ID %s',
+    (value) => expect(isPathId(value)).toBe(false),
   )
 
   it('preserves BIGINT route IDs and enforces the narrower POST boundary', () => {

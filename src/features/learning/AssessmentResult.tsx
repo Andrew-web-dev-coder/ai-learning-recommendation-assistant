@@ -18,18 +18,24 @@ export function AssessmentResult() {
   const { assessment, decision } = workflow
   return (
     <section className="panel">
-      <h2 ref={heading} tabIndex={-1}>
+      <h1 ref={heading} tabIndex={-1}>
         {assessment.is_correct ? 'Correct answer' : 'Incorrect answer'}
-      </h2>
-      {assessment.is_correct ? <p>{assessment.message}</p> : (
+      </h1>
+      {assessment.is_correct ? (
+        <p className="status-message status-message--success">{assessment.message}</p>
+      ) : (
         <>
           <p>Your answer contains a recognized misconception.</p>
           <dl className="assessment-details">
             <dt>Error category ID</dt>
             <dd>{assessment.error_category_id}</dd>
           </dl>
-          <RecommendationCard recommendation={assessment.recommendation} decision={decision}
-            canDecide={canDecide} onDecide={(value) => void dispatch(recordDecision(scope, value))} />
+          <RecommendationCard
+            recommendation={assessment.recommendation}
+            decision={decision}
+            canDecide={canDecide}
+            onDecide={(value) => void dispatch(recordDecision(scope, value))}
+          />
         </>
       )}
     </section>

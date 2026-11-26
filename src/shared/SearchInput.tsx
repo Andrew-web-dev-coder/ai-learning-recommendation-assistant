@@ -15,12 +15,22 @@ export function SearchInput({ label, value, onChange }: SearchInputProps) {
     <div role="search" aria-label={label}>
       <label htmlFor={id}>{label}</label>
       <div className="search-controls">
-        <input ref={input} id={id} type="search" value={value}
-          onChange={(event) => onChange(event.target.value)} />
-        <Button disabled={!value} onClick={() => {
-          onChange('')
-          input.current?.focus()
-        }}>Clear search</Button>
+        <input
+          ref={input}
+          id={id}
+          type="search"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <Button
+          disabled={!value}
+          onClick={() => {
+            onChange('')
+            input.current?.focus()
+          }}
+        >
+          Clear search
+        </Button>
       </div>
     </div>
   )

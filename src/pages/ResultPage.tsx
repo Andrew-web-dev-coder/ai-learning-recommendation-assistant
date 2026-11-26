@@ -6,11 +6,20 @@ export function Component() {
   const { workflow } = useDiagnosticSession()
   return (
     <>
-      <p><Link to="..">Back to diagnostic</Link></p>
-      {workflow.status === 'confirmed' ? <AssessmentResult /> : (
+      <p>
+        <Link className="back-link" to="..">
+          Back to diagnostic
+        </Link>
+      </p>
+      {workflow.status === 'confirmed' ? (
+        <AssessmentResult />
+      ) : (
         <section className="panel">
-          <h2>Result unavailable</h2>
-          <p>Results are only available during the current diagnostic session. Return to the diagnostic to continue.</p>
+          <h1>Result unavailable</h1>
+          <p>
+            Results are only available during the current diagnostic session. Return to the diagnostic to
+            continue.
+          </p>
         </section>
       )}
     </>

@@ -6,8 +6,10 @@ export default function DiagnosticSession() {
   if (!isPathId(courseId) || !isPathId(exerciseId)) {
     return (
       <section className="panel">
-        <h2>Invalid course or exercise address</h2>
-        <Link to="/courses">Back to courses</Link>
+        <h1>Invalid course or exercise address</h1>
+        <Link className="back-link" to="/courses">
+          Back to courses
+        </Link>
       </section>
     )
   }

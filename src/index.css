@@ -1,6 +1,80 @@
 :root {
-  font-family: Inter, system-ui, Arial, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  color-scheme: light dark;
+  --canvas: light-dark(#f1f5f9, #0e1726);
+  --surface: light-dark(#ffffff, #172337);
+  --subtle: light-dark(#eaf0f8, #22324a);
+  --text: light-dark(#16263e, #f1f5fb);
+  --muted: light-dark(#445774, #b2c2da);
+  --accent: light-dark(#234dc1, #adc5ff);
+  --accent-hover: light-dark(#173a9a, #d4e1ff);
+  --on-accent: light-dark(#ffffff, #102450);
+  --line: light-dark(#cad5e4, #415473);
+  --control-border: light-dark(#667a96, #8299ba);
+  --focus: light-dark(#254ad0, #b4cbff);
+  --danger: light-dark(#922936, #ffb9c2);
+  --danger-surface: light-dark(#fff0f1, #3b2230);
+  --warning: light-dark(#724505, #ffda93);
+  --warning-surface: light-dark(#fff2d9, #3b3022);
+  --success: light-dark(#14603d, #a4efc5);
+  --success-surface: light-dark(#e9f8ef, #20372f);
+  --font: system-ui, sans-serif;
+  --font-small: 0.875rem;
+  --font-title: clamp(1.875rem, 1.5rem + 1.5vw, 3rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-control: 0.625rem;
+  --radius-panel: 1.125rem;
+  --border: 1px solid var(--line);
+  --shadow: 0 10px 32px light-dark(#243e6710, #00000038);
+  --focus-ring: 3px solid var(--focus);
+  --focus-offset: 3px;
+  --target: 2.75rem;
+  --content: 65rem;
+  --gutter: clamp(1rem, 3vw, 2rem);
+  --panel-padding: clamp(1rem, 4vw, 2rem);
+  font-family: var(--font);
+  line-height: 1.55;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+}
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--accent-hover);
+}
+:focus-visible,
+main:focus,
+h1[tabindex]:focus,
+.recommendation:focus {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }

@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { learningApi } from '../features/learning/api'
+import { frontendLogging } from './frontendLogging'
 import { workflowReducer } from '../features/learning/workflowSlice'
 
 export function createAppStore() {
@@ -8,7 +9,10 @@ export function createAppStore() {
       workflow: workflowReducer,
       [learningApi.reducerPath]: learningApi.reducer,
     },
-    middleware: (defaults) => defaults().concat(learningApi.middleware),
+    middleware: (defaults) => {
+      const middleware = defaults().concat(learningApi.middleware)
+      return import.meta.env.DEV ? middleware.concat(frontendLogging) : middleware
+    },
     // Mutation actions contain answer text while the request is in flight.
     devTools: false,
   })
