@@ -71,3 +71,52 @@ jobs:
         env:
           CONTRACT_DB_URL: postgresql://contract:contract_ci_only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres
         run: npm run test:contract
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: e2e
+          POSTGRES_PASSWORD: e2e_ci_only
+        ports:
+          - 5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U e2e -d postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production-build browser regressions
+        env:
+          CONTRACT_DB_URL: postgresql://e2e:e2e_ci_only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres
+        run: npm run test:e2e
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-e2e-failure
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

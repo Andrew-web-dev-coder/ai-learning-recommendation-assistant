@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "server:dev": "tsx watch server/index.ts",
-    "test:contract": "node --test tests/api.contract.mjs"
+    "test:contract": "node --test tests/api.contract.mjs",
+    "test:e2e": "VITE_API_URL= npm run build && playwright test"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.15.0",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.65.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.19.2",
