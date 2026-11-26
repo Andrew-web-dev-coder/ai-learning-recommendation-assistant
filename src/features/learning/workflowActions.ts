@@ -1,3 +1,4 @@
+import { answerValidationMessage } from './answerValidation'
 import type { ThunkAction, UnknownAction } from '@reduxjs/toolkit'
 import { isAttemptExerciseId, isPathId } from '../../shared/ids'
 import { learningApi, type Decision } from './api'
@@ -10,7 +11,7 @@ type WorkflowThunk<Result> = ThunkAction<Promise<Result>, WorkflowRoot, unknown,
 export function checkAnswer(scope: ExerciseScope, answer: string): WorkflowThunk<boolean> {
   return async (dispatch, getState) => {
     if (!isPathId(scope.courseId) || !isAttemptExerciseId(scope.exerciseId) ||
-        !answer.trim() || answer.length > 5000 || !selectWorkflowControls(getState(), scope).canSubmit) {
+        answerValidationMessage(answer) || !selectWorkflowControls(getState(), scope).canSubmit) {
       return false
     }
 

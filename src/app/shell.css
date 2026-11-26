@@ -42,11 +42,12 @@ h2 {
 }
 
 .hint {
-  color: #69758a;
+  color: #526078;
 }
 
 .panel {
   background: white;
+  overflow-wrap: anywhere;
   padding: 30px;
   border-radius: 18px;
   margin-bottom: 22px;
@@ -58,7 +59,8 @@ textarea {
   width: 100%;
   margin-top: 8px;
   padding: 12px;
-  border: 1px solid #dce2ee;
+  border: 1px solid #67758d;
+  resize: vertical;
   border-radius: 8px;
 }
 
@@ -90,17 +92,14 @@ textarea {
 
 .recommendation {
   border: 1px solid #cfd7ff;
+  padding: clamp(12px, 4vw, 24px);
+  border-radius: 12px;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-}
-
-.feedback {
-  color: #3459a5;
-  font-weight: 600;
 }
 
 footer {
@@ -114,4 +113,73 @@ footer {
   .panel {
     padding: 20px;
   }
+}
+:where(a, button, input, textarea):focus-visible {
+  outline: 3px solid #3447a4;
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.error-message {
+  color: #a12424;
+}
+
+label,
+.assessment-details dt {
+  font-weight: 600;
+}
+
+.search-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.search-controls input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid #67758d;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.search-controls button,
+.actions button {
+  margin-top: 0;
+}
+
+.catalog-list {
+  padding-inline-start: 1.25rem;
+}
+
+.catalog-list li {
+  margin-block: 12px;
+}
+
+.catalog-list a {
+  font-weight: 600;
+}
+
+.catalog-list .hint {
+  display: block;
+}
+
+textarea[aria-invalid="true"] {
+  border-color: #a12424;
+}
+
+.assessment-details dd {
+  margin: 4px 0 0;
+}
+
+.recommendation h3 {
+  margin-top: 0;
 }

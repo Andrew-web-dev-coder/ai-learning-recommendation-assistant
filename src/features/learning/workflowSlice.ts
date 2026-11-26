@@ -13,7 +13,7 @@ type DecisionOutcome =
   | { status: 'conflict'; error: ApiError }
   | { status: 'saved'; value: Decision }
 
-type DecisionState = { status: 'idle' | 'pending' } | DecisionOutcome
+export type DecisionState = { status: 'idle' | 'pending' } | DecisionOutcome
 type AttemptOutcome =
   | { status: 'uncertain'; error: ApiError }
   | Failure
