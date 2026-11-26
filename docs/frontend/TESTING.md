@@ -142,7 +142,7 @@ The requirement column reproduces all 33 FE-00 criteria. Verified means the cite
 | --- | --- | --- |
 | Advanced Architecture | Verified | [Module and navigation diagrams](ARCHITECTURE.md) and [direct browser route verification](../../tests/e2e/navigation.e2e.mjs). |
 | Advanced State Management | Verified | [Store and ownership](STATE_MANAGEMENT.md), [request reuse and late reads](../../tests/e2e/navigation.e2e.mjs), and [late writes and ambiguous outcomes](../../tests/e2e/recovery.e2e.mjs). |
-| Performance | Unverified | [Cache request counts](../../tests/e2e/navigation.e2e.mjs) provide bounded network-behavior evidence. Browser timings, transfer budgets and profiling remain FE-06 work. |
+| Performance | Partially verified | [Desktop before-and-after measurements, request and asset budgets](PERFORMANCE.md), and [live scoped cache invalidation](../../tests/e2e/navigation.e2e.mjs). Production field timings and component-level profiling remain open. |
 | Advanced UI/UX | Partially verified | [Design tokens and themes](DESIGN_SYSTEM.md) and [keyboard, reflow, page zoom and automated accessibility checks](ACCESSIBILITY.md). Screen-reader output and full WCAG evaluation remain unverified. |
 
 ## FE-04 handoff record
@@ -151,4 +151,4 @@ Coverage uses two synthetic diagnostic seeds, desktop Chromium, and a Pixel 7 em
 
 ## FE-06 handoff
 
-Use the FE-05 asset-size comparison and FE-04 cache and request-count tests as starting evidence. Establish reproducible browser conditions and performance budgets, measure timings, then prioritize optimization from the measurements. [Bundle baseline](DESIGN_SYSTEM.md#production-bundle) · [Accessibility limits](ACCESSIBILITY.md#limits)
+The desktop performance harness reports timings and enforces optional asset and request-order budgets against the production build. The regular browser suite covers live stale-exercise invalidation on both existing Chromium projects. [Measurements and reproduction](PERFORMANCE.md) · [Browser tests](../../tests/e2e/navigation.e2e.mjs)

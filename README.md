@@ -8,6 +8,7 @@
 - [Frontend state management, RTK Query, and recovery](docs/frontend/STATE_MANAGEMENT.md)
 - [Frontend UI requirements and verification](docs/frontend/UI_REQUIREMENTS.md)
 - [Frontend automated testing and rubric evidence](docs/frontend/TESTING.md)
+- [Frontend performance measurements and budgets](docs/frontend/PERFORMANCE.md)
 - [Frontend design system](docs/frontend/DESIGN_SYSTEM.md)
 - [Frontend accessibility and responsive verification](docs/frontend/ACCESSIBILITY.md)
 - [FE-00 frontend baseline audit](docs/frontend/BASELINE_AUDIT.md)
