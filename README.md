@@ -7,6 +7,7 @@
 - [Frontend architecture, routes, and hosting](docs/frontend/ARCHITECTURE.md)
 - [Frontend state management, RTK Query, and recovery](docs/frontend/STATE_MANAGEMENT.md)
 - [Frontend UI requirements and verification](docs/frontend/UI_REQUIREMENTS.md)
+- [Frontend automated testing and rubric evidence](docs/frontend/TESTING.md)
 - [FE-00 frontend baseline audit](docs/frontend/BASELINE_AUDIT.md)
 - [API documentation and integration tutorial](docs/api/README.md)
 - [OpenAPI 3.0.3 contract](docs/api/openapi.json)
@@ -15,6 +16,16 @@
 - Database migration: `database/migrations/001_initial_schema.sql`; reference seed: `database/seeds/001_reference_data.sql`
 
 To run locally, install dependencies with `npm ci`, configure PostgreSQL using `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, run the migration and seed, then launch `npm run server:dev` and `npm run dev` in separate terminals. See the API tutorial for detailed commands and sample requests.
+
+## Verify the current MVP
+
+Run `npm ci`, `npm test`, `npm run lint` and `npm run build` with Node 24.
+For browser checks, install Chromium with `npx playwright install chromium`,
+start the disposable PostgreSQL service, then run `npm run test:e2e`.
+The command builds the frontend and runs Playwright with isolated preview,
+Express and database fixtures for desktop and mobile Chromium. Use the same
+PostgreSQL service for `npm run test:contract`. The testing guide contains the
+copyable Docker setup, environment variable, and report commands. [Frontend testing guide](docs/frontend/TESTING.md#run-locally)
 
 The historical practice report below documents an **earlier October 2026 JavaScript-only prototype** and should not be read as describing the current backend.
 
