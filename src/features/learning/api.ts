@@ -1,7 +1,12 @@
-import { isAttemptExerciseId } from '../../shared/ids'
+import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryMeta } from '@reduxjs/toolkit/query/react'
+import { isAttemptExerciseId, isPathId } from '../../shared/ids'
+import { isRecord, normalizeApiError, unexpectedResponse, type ApiError } from './apiErrors'
 
-const apiOrigin = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
-const demoLearnerId = 1
+interface Health {
+  status: 'ok'
+  database: string
+  message: string
+}
 
 export interface Course {
   course_id: string
@@ -9,130 +14,158 @@ export interface Course {
   title: string
 }
 
-export interface Topic {
+interface Topic {
   topic_id: string
   title: string
+  position: number
 }
 
 export interface Exercise {
   exercise_id: string
   topic_id: string
   prompt: string
+  exercise_type: 'code' | 'text' | 'multiple_choice'
+  is_active: true
 }
 
 export type Decision = 'accepted' | 'rejected'
 
 interface Recommendation {
   recommendation_id: string
+  recommendation_rule_id: string
+  topic_id: string
   topic_title: string
   explanation: string
-  learner_decision: 'pending' | Decision
+  learner_decision: 'pending'
 }
 
 export type Assessment =
-  | { status: 'ok'; assessment_status: 'correct'; attempt_id: string; recommendation: null }
-  | { status: 'ok'; assessment_status: 'incorrect'; attempt_id: string; recommendation: Recommendation }
+  | { status: 'ok'; assessment_status: 'correct'; attempt_id: string; is_correct: true;
+      error_category_id: null; recommendation: null; message: string }
+  | { status: 'ok'; assessment_status: 'incorrect'; attempt_id: string; is_correct: false;
+      error_category_id: string; recommendation: Recommendation }
 
-interface Uncertain {
-  status: 'uncertain'
-  assessment_status: 'uncertain'
+interface DecisionResponse {
+  status: 'ok'
   message: string
+  recommendation: { recommendation_id: string; attempt_id: string; learner_decision: Decision }
 }
 
-async function request<T>(
-  path: string,
-  fallback: string,
-  init: RequestInit,
-  handleUncertain = false,
-): Promise<T> {
-  const response = await fetch(`${apiOrigin}${path}`, init).catch((error: unknown) => {
-    if (init.signal?.aborted) throw error
-    throw new Error(fallback)
-  })
-  const json = response.headers.get('content-type')?.includes('application/json')
-  const data: unknown = json
-    ? await response.json().catch(() => null)
-    : null
+interface SubmitAttempt {
+  courseId: string
+  exerciseId: string
+  answer: string
+}
 
-  if (data && typeof data === 'object' && 'status' in data) {
-    if (response.ok && data.status === 'ok') return data as T
-    if (handleUncertain && response.status === 422 && data.status === 'uncertain') return data as T
-    if (data.status === 'error' && 'message' in data && typeof data.message === 'string') {
-      throw new Error(data.message)
+interface SaveDecision {
+  recommendationId: string
+  attemptId: string
+  decision: Decision
+}
+
+type CourseCollection<T extends string, Item> = { status: 'ok'; course_id: string } & Record<T, Item[]>
+
+const demoLearnerId = 1
+const fetchApi = fetchBaseQuery({
+  baseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:3001',
+  responseHandler: 'content-type',
+  timeout: 12_000,
+})
+
+const baseQuery: BaseQueryFn<string | FetchArgs, unknown, ApiError, object, FetchBaseQueryMeta> =
+  async (args, api, options) => {
+    const result = await fetchApi(args, api, options)
+    if (result.error) return { error: normalizeApiError(result.error), meta: result.meta }
+    if (!isRecord(result.data) || result.data.status !== 'ok') {
+      return { error: unexpectedResponse(result.meta?.response?.status), meta: result.meta }
     }
+    return { data: result.data, meta: result.meta }
   }
 
-  throw new Error(fallback)
+function isId(value: unknown): value is string {
+  return typeof value === 'string' && isPathId(value)
 }
 
-export async function getCourses(signal: AbortSignal) {
-  const data = await request<{ status: 'ok'; courses: Course[] }>(
-    '/api/courses', 'Failed to load courses.', { signal },
-  )
-  return data.courses
-}
-
-export async function getCourse(courseId: string, signal: AbortSignal) {
-  const [courses, topics, exercises] = await Promise.all([
-    getCourses(signal),
-    request<{ status: 'ok'; topics: Topic[] }>(
-      `/api/courses/${courseId}/topics`, 'Failed to load topics.', { signal },
-    ),
-    getExercises(courseId, signal),
-  ])
-
-  return {
-    course: courses.find((course) => course.course_id === courseId),
-    topics: topics.topics,
-    exercises,
+function isAssessment(data: unknown): data is Assessment {
+  if (!isRecord(data) || !isId(data.attempt_id)) return false
+  if (data.assessment_status === 'correct') {
+    return data.is_correct === true && data.error_category_id === null &&
+      data.recommendation === null && typeof data.message === 'string'
   }
+  const recommendation = data.recommendation
+  return data.assessment_status === 'incorrect' && data.is_correct === false &&
+    isId(data.error_category_id) && isRecord(recommendation) &&
+    isId(recommendation.recommendation_id) && isId(recommendation.recommendation_rule_id) &&
+    isId(recommendation.topic_id) && typeof recommendation.topic_title === 'string' &&
+    typeof recommendation.explanation === 'string' && recommendation.learner_decision === 'pending'
 }
 
-export async function getExercises(courseId: string, signal: AbortSignal) {
-  const data = await request<{ status: 'ok'; exercises: Exercise[] }>(
-    `/api/courses/${courseId}/exercises`, 'Failed to load exercises.', { signal },
-  )
-  return data.exercises
-}
-
-export async function submitAttempt(exerciseId: string, answer: string) {
-  if (!isAttemptExerciseId(exerciseId)) throw new Error('This exercise cannot be submitted.')
-
-  const outcome = await request<Assessment | Uncertain>('/api/attempts', 'Failed to check the answer.', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      learner_id: demoLearnerId,
-      exercise_id: Number(exerciseId),
-      submitted_answer: answer,
-    }),
-  }, true)
-  if (outcome.status === 'uncertain') return outcome
-  if (typeof outcome.attempt_id !== 'string' ||
-      !((outcome.assessment_status === 'correct' && outcome.recommendation === null) ||
-        (outcome.assessment_status === 'incorrect' && outcome.recommendation?.learner_decision === 'pending'))) {
-    throw new Error('The assessment result could not be confirmed.')
-  }
-  return outcome
-}
-
-export async function submitDecision(
-  recommendationId: string,
-  attemptId: string,
-  decision: Decision,
-) {
-  const data = await request<{
-    status: 'ok'
-    recommendation: { recommendation_id: string; attempt_id: string; learner_decision: Decision }
-  }>(`/api/recommendations/${recommendationId}/decision`, 'Failed to save the decision.', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ decision }),
-  })
+function isDecisionResponse(data: unknown, request: SaveDecision): data is DecisionResponse {
+  if (!isRecord(data) || typeof data.message !== 'string') return false
   const saved = data.recommendation
-  if (saved?.recommendation_id !== recommendationId || saved.attempt_id !== attemptId ||
-      (saved.learner_decision !== 'accepted' && saved.learner_decision !== 'rejected')) {
-    throw new Error('The saved decision could not be confirmed.')
-  }
-  return saved.learner_decision
+  return isRecord(saved) && saved.recommendation_id === request.recommendationId &&
+    saved.attempt_id === request.attemptId && saved.learner_decision === request.decision
 }
+
+export const learningApi = createApi({
+  reducerPath: 'learningApi',
+  baseQuery,
+  keepUnusedDataFor: 120,
+  refetchOnMountOrArgChange: 60,
+  refetchOnReconnect: true,
+  tagTypes: ['Exercises'],
+  endpoints: (build) => ({
+    getHealth: build.query<Health, void>({
+      query: () => '/api/health',
+      keepUnusedDataFor: 15,
+    }),
+    getCourses: build.query<{ status: 'ok'; courses: Course[] }, void>({
+      query: () => '/api/courses',
+    }),
+    getCourseTopics: build.query<CourseCollection<'topics', Topic>, string>({
+      query: (courseId) => `/api/courses/${encodeURIComponent(courseId)}/topics`,
+    }),
+    getCourseExercises: build.query<CourseCollection<'exercises', Exercise>, string>({
+      query: (courseId) => `/api/courses/${encodeURIComponent(courseId)}/exercises`,
+      providesTags: (result, _error, courseId) => result ? [{ type: 'Exercises', id: courseId }] : [],
+    }),
+    submitAttempt: build.mutation<Assessment, SubmitAttempt>({
+      async queryFn({ exerciseId, answer }, _api, _options, query) {
+        if (!isAttemptExerciseId(exerciseId) || !answer.trim() || answer.length > 5000) {
+          return { error: { kind: 'invalid', message: 'Choose a valid exercise and enter an answer.' } }
+        }
+        const result = await query({
+          url: '/api/attempts',
+          method: 'POST',
+          redirect: 'error',
+          body: { learner_id: demoLearnerId, exercise_id: Number(exerciseId), submitted_answer: answer },
+        })
+        if (result.error) return { error: result.error }
+        const status = result.meta?.response?.status
+        return status === 201 && isAssessment(result.data)
+          ? { data: result.data }
+          : { error: unexpectedResponse(status) }
+      },
+      invalidatesTags: (_result, error, { courseId }) => error?.staleExercise
+        ? [{ type: 'Exercises', id: courseId }]
+        : [],
+    }),
+    saveDecision: build.mutation<DecisionResponse, SaveDecision>({
+      async queryFn(request, _api, _options, query) {
+        const result = await query({
+          url: `/api/recommendations/${encodeURIComponent(request.recommendationId)}/decision`,
+          method: 'PATCH',
+          redirect: 'error',
+          body: { decision: request.decision },
+        })
+        if (result.error) return { error: result.error }
+        const status = result.meta?.response?.status
+        return status === 200 && isDecisionResponse(result.data, request)
+          ? { data: result.data }
+          : { error: unexpectedResponse(status) }
+      },
+    }),
+  }),
+})
+
+export const { useGetCoursesQuery, useGetCourseTopicsQuery, useGetCourseExercisesQuery } = learningApi
