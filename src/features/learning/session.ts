@@ -1,16 +1,14 @@
 import { useOutletContext } from 'react-router'
-import type { Assessment, Decision } from './api'
+import { useAppSelector } from '../../shared/storeHooks'
+import { selectWorkflow, selectWorkflowControls, type ExerciseScope } from './workflowSlice'
 
-export interface DiagnosticSession {
-  courseId: string
-  exerciseId: string
-  assessment: Assessment | null
-  setAssessment: (assessment: Assessment | null) => void
-  saveDecision: (decision: Decision) => Promise<void>
-  savingDecision: Decision | null
-  decisionError: string
+export function useExerciseScope() {
+  return useOutletContext<ExerciseScope>()
 }
 
 export function useDiagnosticSession() {
-  return useOutletContext<DiagnosticSession>()
+  const scope = useExerciseScope()
+  const workflow = useAppSelector((state) => selectWorkflow(state, scope))
+  const controls = useAppSelector((state) => selectWorkflowControls(state, scope))
+  return { scope, workflow, ...controls }
 }

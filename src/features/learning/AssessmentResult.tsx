@@ -1,12 +1,15 @@
 import { ErrorMessage } from '../../shared/Status'
+import { useAppDispatch } from '../../shared/storeHooks'
 import { useDiagnosticSession } from './session'
+import { recordDecision } from './workflowActions'
 
 export function AssessmentResult() {
-  const { assessment, saveDecision, savingDecision, decisionError } = useDiagnosticSession()
-  if (!assessment) return null
+  const { scope, workflow, canDecide } = useDiagnosticSession()
+  const dispatch = useAppDispatch()
+  if (workflow.status !== 'confirmed') return null
 
+  const { assessment, decision } = workflow
   const recommendation = assessment.recommendation
-  const saved = recommendation && recommendation.learner_decision !== 'pending'
   return (
     <section className="panel recommendation">
       {assessment.assessment_status === 'correct' ? (
@@ -24,22 +27,27 @@ export function AssessmentResult() {
         <>
           <h3>Recommended next topic: {recommendation.topic_title}</h3>
           <p>{recommendation.explanation}</p>
-          {saved ? (
-            <p className="feedback" role="status">Saved decision: <strong>{recommendation.learner_decision}</strong></p>
-          ) : (
+          {(canDecide || decision.status === 'pending') && (
             <div className="actions">
-              <button className="primary-button" disabled={Boolean(savingDecision)}
-                onClick={() => void saveDecision('accepted')}>
+              <button className="primary-button" disabled={!canDecide}
+                onClick={() => void dispatch(recordDecision(scope, 'accepted'))}>
                 Accept
               </button>
-              <button className="secondary-button" disabled={Boolean(savingDecision)}
-                onClick={() => void saveDecision('rejected')}>
+              <button className="secondary-button" disabled={!canDecide}
+                onClick={() => void dispatch(recordDecision(scope, 'rejected'))}>
                 Reject
               </button>
             </div>
           )}
-          {savingDecision && <p role="status">Saving decision…</p>}
-          {decisionError && <ErrorMessage message={decisionError} />}
+          {decision.status === 'saved' && (
+            <p className="feedback" role="status">Saved decision: <strong>{decision.value}</strong></p>
+          )}
+          {decision.status === 'pending' && <p role="status">Saving decision…</p>}
+          {(decision.status === 'conflict' || decision.status === 'failed') &&
+            <ErrorMessage message={decision.error.message} />}
+          {decision.status === 'ambiguous' && (
+            <ErrorMessage message="We could not confirm whether the decision was saved. Decision controls are closed for this recommendation." />
+          )}
         </>
       )}
     </section>
