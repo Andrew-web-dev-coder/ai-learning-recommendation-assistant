@@ -1,3 +1,4 @@
+import { Button } from '../../shared/Button'
 import { ErrorMessage, Loading } from '../../shared/Status'
 import { queryErrorMessage } from './apiErrors'
 
@@ -10,9 +11,9 @@ export function QueryFeedback({ isFetching, error, onRefresh }: {
     <>
       {isFetching && <Loading message="Refreshing…" />}
       {error && <ErrorMessage message={queryErrorMessage(error)} />}
-      <button className="secondary-button" disabled={isFetching} onClick={onRefresh}>
+      <Button disabled={isFetching} onClick={onRefresh}>
         {error ? 'Retry loading' : 'Refresh'}
-      </button>
+      </Button>
     </>
   )
 }

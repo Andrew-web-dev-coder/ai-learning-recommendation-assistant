@@ -1,3 +1,4 @@
+import { answerValidationMessage } from './answerValidation'
 import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryMeta } from '@reduxjs/toolkit/query/react'
 import { isAttemptExerciseId, isPathId } from '../../shared/ids'
 import { isRecord, normalizeApiError, unexpectedResponse, type ApiError } from './apiErrors'
@@ -131,7 +132,7 @@ export const learningApi = createApi({
     }),
     submitAttempt: build.mutation<Assessment, SubmitAttempt>({
       async queryFn({ exerciseId, answer }, _api, _options, query) {
-        if (!isAttemptExerciseId(exerciseId) || !answer.trim() || answer.length > 5000) {
+        if (!isAttemptExerciseId(exerciseId) || answerValidationMessage(answer)) {
           return { error: { kind: 'invalid', message: 'Choose a valid exercise and enter an answer.' } }
         }
         const result = await query({
