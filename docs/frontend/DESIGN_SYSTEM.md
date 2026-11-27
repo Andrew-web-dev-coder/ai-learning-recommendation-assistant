@@ -15,6 +15,14 @@ FE-05 starts from `1c43b92acfaa6e8c36e51d9e980b0f6daff6e98c`, the merge of PR #1
 
 The tokens live in the global stylesheet. Shell and learner component styles consume the same values. Course cards use the course title as the link name and show the course code in the card. [Tokens](../../src/index.css) · [Component styles](../../src/app/shell.css) · [Shared controls](../../src/shared)
 
+## Native-backed UI kit
+
+The catalog-to-diagnostic workflow uses native buttons, links, a search input and a textarea. The shared Button keeps variants, default button type and native disabled behavior consistent. SearchInput associates a visible label with the field and returns focus to it after clearing. Shared feedback uses status roles for pending updates and alert roles for errors, so pages apply a consistent announcement pattern. The browser supplies native focus and keyboard activation for interactive elements. The application adds visible focus styles and handles focus when navigation or validation changes the learner's context. [Button](../../src/shared/Button.tsx) · [Search input](../../src/shared/SearchInput.tsx) · [Feedback](../../src/shared/Status.tsx) · [Accessibility evidence](ACCESSIBILITY.md)
+
+The MVP's screens need a small set of primitives, so the project shares styles through semantic CSS tokens in `index.css` and component rules in `shell.css`. Both palettes use the same rules and components, including the feedback colors and focus indicator. This keeps styling changes centralized while letting each view compose the markup it needs. Adopting a broad third-party kit for the current workflow would require integrating its theme and component conventions with these same controls.
+
+The project maintains labels, focus transitions, visual contrast, responsive layout and feedback semantics. Changes to shared primitives need keyboard and responsive regression checks in both themes. Native controls still vary across browsers, and complex widgets would require additional interaction design and assistive-technology testing. Existing browser and axe evidence covers the states and profiles recorded in the accessibility guide. [Tokens](../../src/index.css) · [Styles](../../src/app/shell.css) · [Verification scope](ACCESSIBILITY.md#limits)
+
 ## Theme
 
 The native **Dark theme** toggle exposes its state through `aria-pressed`. CSS uses the operating system color preference through `color-scheme` and `light-dark()` until an explicit choice sets `data-theme` on the root. The toggle reflects changes to the system preference while the document has no override. The app reads the stored preference on startup before React renders.

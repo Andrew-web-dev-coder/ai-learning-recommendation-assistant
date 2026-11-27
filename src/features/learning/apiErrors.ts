@@ -30,8 +30,8 @@ export function normalizeApiError(error: FetchBaseQueryError): ApiError {
   const staleExercise = body?.status === 'error' && body.message === 'Active exercise not found'
   switch (status) {
     case 400: return { kind: 'invalid', status, message: 'The service rejected the request. Check your input.' }
-    case 401:
-    case 403: return { kind: 'access', status, message: 'The service denied access to this request.' }
+    case 401: return { kind: 'access', status, message: 'The service requires authentication for this request. Return to Courses or contact the demo maintainer.' }
+    case 403: return { kind: 'access', status, message: 'The service does not permit this request. Return to Courses and choose another exercise.' }
     case 404: return staleExercise
       ? { kind: 'missing', status, staleExercise: true, message: 'This exercise is no longer available.' }
       : { kind: 'missing', status, message: 'The requested resource was not found. Return to Courses and check your selection.' }
