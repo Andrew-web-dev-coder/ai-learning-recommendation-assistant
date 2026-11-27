@@ -117,3 +117,5 @@ Bring the exact-SHA CI link and browser report, including axe attachments and ca
 **FE-08 follow-up, 27 November 2026.** See the [minimum requirements closure](frontend/MINIMUM_REQUIREMENTS_CLOSURE.md) for subsequent M5, M29 and M30 evidence. The findings above apply to the original FE-07 audited revision.
 
 **FE-09 follow-up, 27 November 2026.** See the [advanced requirements closure](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md) for evidence collected after PR #19. The findings above retain the original FE-07 audited revision.
+
+**FE-10 follow-up, 27 November 2026.** The [final defense package](frontend/FINAL_DEFENSE_PACKAGE.md) records verification of the PR #20 merge and the [consolidated evidence matrix](FRONTEND_FINAL_EVIDENCE_MATRIX.md#fe-10-consolidated-readiness) incorporates the FE-08 and FE-09 follow-ups. The audit above records the original FE-07 revision.

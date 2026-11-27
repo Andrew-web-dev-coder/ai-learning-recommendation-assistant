@@ -92,3 +92,61 @@ The official rule on p. 3 reads “All minimum requirements plus completing 2--3
 **FE-08 follow-up, 27 November 2026.** See the [minimum requirements closure](frontend/MINIMUM_REQUIREMENTS_CLOSURE.md) for subsequent M5, M29 and M30 evidence. The findings above apply to the original FE-07 audited revision.
 
 **FE-09 follow-up, 27 November 2026.** See the [advanced requirements closure](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md) for evidence collected after PR #19. The findings above retain the original FE-07 audited revision.
+
+## FE-10 consolidated readiness
+
+This section applies to the merged PR #20 baseline. The preceding tables retain the FE-07 wording, statuses and evidence. The [final defense package](frontend/FINAL_DEFENSE_PACKAGE.md) records the exact revision and reruns. FE-10 used the rubric transcription above and FE-09's documented comparison with the November 21 PDF. The PDF was unavailable in this session and the live source required sign-in.
+
+**Verified** means demonstrated in the cited scope. **Partial** means evidence covers a subset or has a material qualification. **Open** means the criterion lacks implementation or sufficient evidence. **Not applicable** means the rubric explicitly limits the criterion to a different stack.
+
+### Minimum requirements at FE-10
+
+| Criteria from the historical table | FE-10 status | Current evidence and scope |
+| --- | --- | --- |
+| M0, M6–M7, M9–M11 | Verified | React SPA, page, component, service and hook boundaries, four functional routes, local and Redux state, and feature organization. The result route requires an in-memory assessment and offers recovery on reload. [Architecture](frontend/ARCHITECTURE.md) · [Routes](../src/app/routes.tsx) · [Navigation tests](../tests/e2e/navigation.e2e.mjs) |
+| M1–M5 | Verified | Module, state and navigation diagrams, API schemas/examples, and rationale for the framework, state manager and native-backed kit. FE-08 closed the M5 documentation gap. [Architecture](frontend/ARCHITECTURE.md) · [OpenAPI](api/openapi.json) · [UI kit](frontend/DESIGN_SYSTEM.md#native-backed-ui-kit) |
+| M8 | Not applicable | The rubric requires these modules for Angular. This application uses React. [Manifest](../package.json) |
+| M12–M15 | Verified | Seeded Express/PostgreSQL integration, typed endpoint envelopes, centralized requests and user-visible loading/error branches. Runtime write guards cover confirmation payloads. Read envelopes rely on static types. [Client API](../src/features/learning/api.ts) · [Contract tests](../tests/api.contract.mjs) · [Browser tests](../tests/e2e) |
+| M16–M20 | Verified | Vite production build, composed pages, shared layout and reusable native-backed kit. [Scripts](../package.json) · [App shell](../src/app/AppShell.tsx) · [Design system](frontend/DESIGN_SYSTEM.md) |
+| M21–M24 | Verified | Controlled input and validation, semantic catalog/topics/exercises lists, search, desktop and emulated mobile reflow. [Learner journeys](../tests/e2e/learning.e2e.mjs) · [Navigation](../tests/e2e/navigation.e2e.mjs) · [Quality checks](../tests/e2e/frontend-quality.e2e.mjs) |
+| M25–M28 | Verified | Inspected module boundaries, lint and configured format checks, scoped rejection logging and root route boundary. Readability remains qualitative. Boundary evidence comes from source inspection. [Architecture](frontend/ARCHITECTURE.md) · [Logger test](../src/app/frontendLogging.test.ts) · [Route boundary](../src/app/RouteError.tsx) |
+| M28b | Verified | Contextual inline alerts offer recovery near the failure. Acceptance of alternative presentation to the listed widgets is for the assessor. [Alerts](../src/shared/Status.tsx) · [Recovery tests](../tests/e2e/recovery.e2e.mjs) |
+| M29 | Verified | Client-side handling for 401/403/404/500. Browser 401/403 and catalog 500 are synthetic. Stale-exercise 404 and the contract rollback on 500 use real Express. A live access-control contract remains open. [FE-08 closure](frontend/MINIMUM_REQUIREMENTS_CLOSURE.md) · [Contract](../tests/api.contract.mjs) |
+| M30 | Verified | FE-08 added controlled cold read and route-chunk delays. Read refresh/retry and pending writes have visible status. Warm reads reuse data and the speculative result import shares the submit wait. [Loading tests](../tests/e2e/loading.e2e.mjs) · [Pending write tests](../tests/e2e/recovery.e2e.mjs) |
+| M31–M32 | Verified | Unit tests cover more than three frontend units and integration/E2E tests exercise forms, state and HTTP across both tracks. [UI tests](../src/features/learning/uiRequirements.test.tsx) · [Store tests](../src/features/learning/learning.integration.test.ts) · [Browser journeys](../tests/e2e/learning.e2e.mjs) |
+| M33–M38 | Verified | Audited frontend uses shared styles, composed React modules, centralized error handling and typed data. Theme preference is the persisted UI setting. Live service credentials stay in backend environment configuration. This review covers tracked application source. [Styles](../src/index.css) · [Theme](../src/app/theme.ts) · [Errors](../src/features/learning/apiErrors.ts) · [React entry](../src/main.tsx) · [DB configuration](../server/db.ts) |
+
+**5-point path** is technically ready for assessment under the current learner scope. Confirm treatment of synthetic 401/403, inline alerts and the guarded result route.
+
+### Advanced requirements at FE-10
+
+| Direction and criterion | FE-10 status | Current evidence and scope |
+| --- | --- | --- |
+| Architecture · Micro frontends | Open | Single application and deployment. [Architecture](frontend/ARCHITECTURE.md) |
+| Architecture · BFF | Open | Typed Express API and same-origin test proxy. [API interaction](frontend/ARCHITECTURE.md#state-and-api-interaction) |
+| Architecture · Feature modules | Verified | App, pages, shared controls and learning feature have documented ownership. [Module boundaries](frontend/ARCHITECTURE.md#stack-and-module-boundaries) |
+| Architecture · Lazy modules/routes | Verified | Separate page chunks and controlled cold-route waits. [Routes](../src/app/routes.tsx) · [Loading tests](../tests/e2e/loading.e2e.mjs) |
+| Architecture · Clean Architecture/FSD/DDD | Partial | Modular ownership and dependencies provide evidence for separation. Adoption of a complete named approach remains open. [Architecture](frontend/ARCHITECTURE.md) |
+| **Advanced Architecture** | **Partial** | Feature boundaries and lazy routes cover part of the list. |
+| State · Redux Toolkit modules/slices | Verified | Workflow slice plus RTK Query reducer and middleware. [Store](../src/app/store.ts) |
+| State · Reactive state | Verified | React Redux subscriptions and RTK Query hooks update the UI. Assessor acceptance of equivalence to the listed tools remains open. [Typed hooks](../src/shared/storeHooks.ts) · [API](../src/features/learning/api.ts) |
+| State · Selectors, effects and memoization | Verified | Derived eligibility selectors, scoped async thunks, and UI focus effects. [Slice](../src/features/learning/workflowSlice.ts) · [Recommendation controls](../src/features/learning/RecommendationCard.tsx) |
+| State · Complex async chains | Verified | Scoped attempt and decision writes, late results, deduplication and recovery. [Workflow](../src/features/learning/workflowActions.ts) · [Store tests](../src/features/learning/learning.integration.test.ts) |
+| **Advanced State Management** | **Verified** | Evidence covers the current stack and seeded learner workflows. |
+| Performance · Splitting/lazy loading | Verified | Cold chunks and result-load overlap with the POST. [Harness](../tests/e2e/frontend.perf.mjs) |
+| Performance · Component memoization | Open | Historical profiling measured low subtree update cost. Selector memoization covers a separate criterion. [FE-09 profile](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md#react-profiler) |
+| Performance · Web Workers | Open | Assessment runs on the server and the browser filters a small catalog. [Architecture](frontend/ARCHITECTURE.md) |
+| Performance · Lighthouse ≥90 desktop/mobile | Verified | Historical FE-09 cold lab measurements on the local production catalog meet the threshold for that scope. FE-10 reran the FE-06 harness. [Lighthouse](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md#lighthouse) |
+| Performance · Bundle reduction and analysis | Partial | Asset analysis and budgets are recorded. A reduction in total bundle size remains unverified. [Bundle comparison](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md#production-bundle-and-fe-06-budgets) |
+| **Performance** | **Partial** | Local lab evidence covers only some criteria. |
+| UI/UX · Animation | Verified | CSS pressed feedback on hover-capable devices with motion enabled. Assessor interpretation of the animation example remains open. [Styles](../src/app/shell.css) · [Quality tests](../tests/e2e/frontend-quality.e2e.mjs) |
+| UI/UX · Component design kit | Verified | Shared native-backed controls and semantic tokens. [Design system](frontend/DESIGN_SYSTEM.md) |
+| UI/UX · Data visualization | Open | Result presents one outcome and its recommendation. The current contract has no progress series or quantitative score to plot. [Result UI](../src/features/learning/AssessmentResult.tsx) · [OpenAPI](api/openapi.json) |
+| UI/UX · Dark/light theme | Verified | System preference, explicit choice, persistence and storage failure. [Quality tests](../tests/e2e/frontend-quality.e2e.mjs) |
+| UI/UX · ARIA and accessible names | Verified | Named controls and landmarks, status and alert semantics, and scoped automated coverage. [Accessibility](frontend/ACCESSIBILITY.md) |
+| UI/UX · Keyboard navigation | Verified | Tested focus across skip link, validation, result and decision, plus both palettes under reduced motion. [Quality tests](../tests/e2e/frontend-quality.e2e.mjs) |
+| UI/UX · Contrast | Verified | Scoped token contrast review and axe checks. [FE-09 contrast sample](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md#accessibility-and-responsive-evidence) |
+| UI/UX · Overall WCAG accessibility | Partial | Full WCAG 2.2 AA, screen-reader and physical-device evaluation remain open. [Limits](frontend/ACCESSIBILITY.md#limits) |
+| **Advanced UI/UX** | **Partial** | Documented accessibility and theme evidence covers part of the direction. |
+
+**10-point path** remains conditional. The rubric calls for all minimum requirements plus 2–3 completed directions. State Management has demonstrated evidence across its list for this stack. Performance and UI/UX offer evidence for a second direction if the assessor accepts the demonstrated scope. Architecture remains partial. The recorded rubric leaves the completion threshold within each direction to interpretation.
