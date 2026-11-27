@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router'
 import DiagnosticSession from '../features/learning/DiagnosticSession'
+import { loadResultPage } from '../features/learning/loadResultPage'
 import { AppShell, InitialLoading } from './AppShell'
 import { RouteError } from './RouteError'
 
@@ -17,7 +18,7 @@ export const routes: RouteObject[] = [
         Component: DiagnosticSession,
         children: [
           { index: true, lazy: () => import('../pages/DiagnosticPage') },
-          { path: 'result', lazy: () => import('../pages/ResultPage') },
+          { path: 'result', lazy: loadResultPage },
         ],
       },
       { path: '*', lazy: () => import('../pages/NotFoundPage') },

@@ -6,6 +6,7 @@ import { ErrorMessage, StatusMessage } from '../../shared/Status'
 import { useAppDispatch } from '../../shared/storeHooks'
 import { answerValidationMessage, maxAnswerLength } from './answerValidation'
 import type { Exercise } from './api'
+import { loadResultPage } from './loadResultPage'
 import { useDiagnosticSession } from './session'
 import { checkAnswer } from './workflowActions'
 import { workflowActions } from './workflowSlice'
@@ -39,7 +40,10 @@ export function AnswerForm({ exercise }: { exercise: Exercise }) {
       answerInput.current?.focus()
       return
     }
-    const confirmed = await dispatch(checkAnswer(scope, answer))
+    const attempt = dispatch(checkAnswer(scope, answer))
+    // Load the result module while Express assesses the answer. The router handles load errors.
+    void loadResultPage().catch(() => {})
+    const confirmed = await attempt
     // Redux can finish the originating exercise after navigation. Only the mounted form may navigate.
     if (confirmed && active.current) void navigate('result')
   }

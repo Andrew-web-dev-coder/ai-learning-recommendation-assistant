@@ -38,6 +38,43 @@ test('catalog search and route navigation reuse fresh GET cache entries', async 
   expect(exerciseReads()).toBe(1);
 });
 
+test('a stale diagnostic refreshes only its exercise collection', async ({ page, app }) => {
+  const python = app.tracks.PYTHON;
+  const lithuanian = app.tracks.LITHUANIAN;
+  const reads = [];
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (request.method() === 'GET' && path.startsWith('/api/')) reads.push(path);
+  });
+
+  await page.goto(lithuanian.diagnostic);
+  await expect(field(page)).toBeVisible();
+  await page.getByRole('link', { name: 'Courses', exact: true }).click();
+  await page.getByRole('link', { name: 'Introduction to Python', exact: true }).click();
+  await page.getByRole('link', { name: `Exercise ${python.exerciseId}` }).click();
+  await expect(field(page)).toBeVisible();
+
+  const changed = await app.db.query(
+    'UPDATE exercises SET is_active = false WHERE exercise_id = $1', [python.exerciseId],
+  );
+  expect(changed.rowCount).toBe(1);
+
+  const before = reads.length;
+  await sendAnswer(page, answers.pythonMisconception.value.submitted_answer, 404);
+  await expect(page.getByRole('alert')).toHaveText('This exercise is unavailable for this course.');
+  expect(reads.slice(before)).toEqual([`/api${python.course}/exercises`]);
+  expect((await app.db.query('SELECT attempt_id FROM attempts')).rowCount).toBe(0);
+
+  await page.getByRole('link', { name: 'Courses', exact: true }).click();
+  await page.getByRole('link', { name: 'Lithuanian Grammar', exact: true }).click();
+  await page.getByRole('link', { name: `Exercise ${lithuanian.exerciseId}` }).click();
+  await expect(field(page)).toBeVisible();
+  // Topics for Lithuania were not loaded on its initial diagnostic deep link.
+  expect(reads.slice(before)).toEqual([
+    `/api${python.course}/exercises`, `/api${lithuanian.course}/topics`,
+  ]);
+});
+
 test('deep links, invalid IDs, and Not Found recover without writes', async ({ page, app }) => {
   const posts = countRequests(page, 'POST', /^\/api\/attempts$/);
   const patches = countRequests(page, 'PATCH', /^\/api\/recommendations\//);
