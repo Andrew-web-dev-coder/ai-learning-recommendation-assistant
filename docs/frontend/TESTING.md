@@ -152,3 +152,7 @@ Coverage uses two synthetic diagnostic seeds, desktop Chromium, and a Pixel 7 em
 ## FE-06 handoff
 
 The desktop performance harness reports timings and enforces optional asset and request-order budgets against the production build. The regular browser suite covers live stale-exercise invalidation on both existing Chromium projects. [Measurements and reproduction](PERFORMANCE.md) · [Browser tests](../../tests/e2e/navigation.e2e.mjs)
+
+## FE-09 follow-up, 27 November 2026
+
+The [FE-09 evidence matrix and regression results](ADVANCED_REQUIREMENTS_CLOSURE.md) supersede the historical advanced status table above. In particular, Advanced Architecture remains partially verified across the rubric's full list.

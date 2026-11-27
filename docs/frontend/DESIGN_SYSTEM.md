@@ -50,3 +50,7 @@ Vite 8.3.3 production browser builds with `VITE_API_URL=` on Node 24.22.3. Sizes
 | Not found route | 0.25 / 0.20 | 0.27 / 0.21 |
 
 FE-06 owns systematic browser timing, runtime profiling and performance budgets. This comparison measures emitted asset sizes. [Accessibility evidence and limitations](ACCESSIBILITY.md)
+
+## FE-09 follow-up, 27 November 2026
+
+Enabled primary and secondary buttons ease the existing pressed inset shadow over 120 ms when hover is available and the user permits motion. Focus outlines and theme colors update immediately. [Behavior and verification](ADVANCED_REQUIREMENTS_CLOSURE.md#accessibility-and-responsive-evidence)
