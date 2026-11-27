@@ -26,6 +26,10 @@ flowchart TD
 
 Imports run from app to pages or features, and from pages to features or shared. Features can use shared code. The shared Redux hooks import store types only. Runtime dependencies point down the layers. Pages compose features without importing other pages, and the feature layer does not depend on app composition. [Route tree](../../src/app/routes.tsx) · [App shell](../../src/app/AppShell.tsx) · [Learning feature](../../src/features/learning) · [Shared components and guards](../../src/shared)
 
+### UI kit choice
+
+The MVP centers on four learner screens with course links, a labeled search field, a diagnostic textarea, assessment feedback, and two recommendation actions. Native HTML already provides the semantics and input behavior these screens need. Small React wrappers share the site's button variants, search behavior and status markup. The learner screens compose those primitives and keep data fetching, validation and route focus in their existing layers. A broad UI library would add a component API and theme integration for widgets outside this workflow, such as dialogs and data grids. The team owns the shared components and their behavior across supported layouts, keyboard interactions and themes. See the [design system rationale](DESIGN_SYSTEM.md#native-backed-ui-kit).
+
 ## Routes and navigation
 
 | Path | Screen and behavior |

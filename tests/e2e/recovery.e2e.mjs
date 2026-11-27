@@ -20,8 +20,23 @@ test('injected catalog failure shows loading, then recovers via explicit retry',
   }
   await expect(page.getByRole('alert')).toHaveText('The service encountered an error.');
   expect(gets()).toBe(1);
-  await page.getByRole('button', { name: 'Retry loading' }).click();
+  const retry = Promise.withResolvers();
+  await page.route(catalogPath, async route => {
+    await retry.promise;
+    await route.continue();
+  }, { times: 1 });
+  const retryControl = page.getByRole('button', { name: /^(?:Retry loading|Refresh)$/ });
+  const refreshing = page.getByRole('status').filter({ hasText: 'Refreshing…' });
+  try {
+    await page.getByRole('button', { name: 'Retry loading' }).click();
+    await expect(refreshing).toBeVisible();
+    await expect(retryControl).toBeDisabled();
+    await expect(page.getByRole('searchbox')).toHaveCount(0);
+  } finally {
+    retry.resolve();
+  }
   await expect(page.getByRole('link', { name: 'Introduction to Python' })).toBeVisible();
+  await expect(refreshing).toHaveCount(0);
   expect(gets()).toBe(2);
 });
 
@@ -41,6 +56,44 @@ test('injected diagnostic rejection preserves the draft and permits manual corre
   await expect(heading(page, 'Correct answer')).toBeVisible();
   expect(posts()).toBe(2);
 });
+
+for (const [status, message] of [
+  [401, 'The service requires authentication for this request. Return to Courses or contact the demo maintainer.'],
+  [403, 'The service does not permit this request. Return to Courses and choose another exercise.'],
+]) {
+  test(`injected HTTP ${status} denies assessment safely and allows recovery`, async ({ page, app }) => {
+    const syntheticAnswer = `Synthetic diagnostic submission for HTTP ${status}.`;
+    const privateDetail = 'Synthetic private transport response detail';
+    const consoleMessages = [];
+    page.on('console', entry => consoleMessages.push(entry.text()));
+    await page.route(attempts, route => route.fulfill({
+      status,
+      json: { status: 'error', message: privateDetail, submitted_answer: syntheticAnswer },
+    }), { times: 1 });
+
+    const posts = countRequests(page, 'POST', /^\/api\/attempts$/);
+    const { diagnostic } = app.tracks.PYTHON;
+    await page.goto(diagnostic);
+    await sendAnswer(page, syntheticAnswer, status);
+    await expect(page.getByRole('alert')).toHaveText(message);
+    await expect(field(page)).toHaveValue(syntheticAnswer);
+    await expect(check(page)).toBeEnabled();
+    await expect(page).toHaveURL(diagnostic);
+    await expect(page.getByRole('heading', { name: /^(?:Correct answer|Incorrect answer|Recommended next topic)$/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /View this session/ })).toHaveCount(0);
+    expect(posts()).toBe(1);
+    expect((await app.db.query('SELECT attempt_id FROM attempts')).rowCount).toBe(0);
+
+    await page.getByRole('link', { name: 'Courses', exact: true }).click();
+    await page.getByRole('link', { name: 'Introduction to Python' }).click();
+    await page.getByRole('link', { name: `Exercise ${app.tracks.PYTHON.exerciseId}` }).click();
+    await sendAnswer(page, answers.pythonCorrect.value.submitted_answer, 201);
+    await expect(heading(page, 'Correct answer')).toBeVisible();
+    expect(posts()).toBe(2);
+    expect(consoleMessages.join('\n')).not.toContain(syntheticAnswer);
+    expect(consoleMessages.join('\n')).not.toContain(privateDetail);
+  });
+}
 
 test('delayed POST stays in its original route scope and blocks duplicate submits', async ({ page, app }) => {
   const release = Promise.withResolvers();

@@ -88,3 +88,5 @@ The official rule on p. 3 reads “All minimum requirements plus completing 2--3
 | 4 — “contrast” | PARTIALLY VERIFIED | [Theme tokens](../src/index.css) and [axe checks in both themes](../tests/e2e/frontend-quality.e2e.mjs#L13). | Sampled automated contrast checks. Add a manual contrast record for interaction states, focus indicators and non-text controls. |
 | 4 — “Accessibility (WCAG)” as a combined claim | PARTIALLY VERIFIED | [Accessibility evidence and limits](frontend/ACCESSIBILITY.md). | No full WCAG conformance assessment. Record screen-reader, manual contrast and real-device checks. |
 | **4 — Advanced UI/UX, whole direction** | **PARTIALLY VERIFIED** | Custom kit, theme, keyboard, ARIA, responsive layout and scoped axe evidence. | Manual accessibility evidence, animations and data visualization remain open. |
+
+**FE-08 follow-up, 27 November 2026.** See the [minimum requirements closure](frontend/MINIMUM_REQUIREMENTS_CLOSURE.md) for subsequent M5, M29 and M30 evidence. The findings above apply to the original FE-07 audited revision.
