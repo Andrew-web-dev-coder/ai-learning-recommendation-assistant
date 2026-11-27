@@ -90,3 +90,5 @@ The official rule on p. 3 reads “All minimum requirements plus completing 2--3
 | **4 — Advanced UI/UX, whole direction** | **PARTIALLY VERIFIED** | Custom kit, theme, keyboard, ARIA, responsive layout and scoped axe evidence. | Manual accessibility evidence, animations and data visualization remain open. |
 
 **FE-08 follow-up, 27 November 2026.** See the [minimum requirements closure](frontend/MINIMUM_REQUIREMENTS_CLOSURE.md) for subsequent M5, M29 and M30 evidence. The findings above apply to the original FE-07 audited revision.
+
+**FE-09 follow-up, 27 November 2026.** See the [advanced requirements closure](frontend/ADVANCED_REQUIREMENTS_CLOSURE.md) for evidence collected after PR #19. The findings above retain the original FE-07 audited revision.

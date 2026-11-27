@@ -46,3 +46,7 @@ The two audit cases per browser project capture catalog and result screenshots i
 ## Limits
 
 Screen-reader testing was unavailable in this environment. Announced wording, timing and order still need human verification with assistive technology. Verification uses Chromium and an emulated mobile profile. Other engines, physical devices, operating system high-contrast modes and a full manual WCAG 2.2 AA review remain unverified. Performance timing and budget work remain with FE-06.
+
+## FE-09 follow-up, 27 November 2026
+
+Shared buttons ease their existing pressed indication for hover-capable users who allow motion. Reduced-motion and touch-oriented profiles use immediate feedback. The [FE-09 accessibility evidence](ADVANCED_REQUIREMENTS_CLOSURE.md#accessibility-and-responsive-evidence) covers both themes, sampled contrast pairs, reduced-motion focus, and the expanded reflow checks. The FE-05 results above describe the historical build.

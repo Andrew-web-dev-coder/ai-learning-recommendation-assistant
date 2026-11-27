@@ -152,40 +152,74 @@ test('keyboard can skip the header, open a course and recover from invalid input
   await expect(recommendation).toBeFocused()
 })
 
-test('learner pages reflow at five widths and with enlarged text', async ({ page, app }) => {
-  await page.goto('/courses')
-  await expect(python(page)).toBeVisible()
-  async function checkWidths() {
-    for (const width of [320, 375, 768, 1024, 1440]) {
-      await page.setViewportSize({ width, height: 900 })
-      const scroll = await page.evaluate(() => document.documentElement.scrollWidth)
-      expect(scroll, `page width at viewport ${width}`).toBeLessThanOrEqual(width)
+for (const colorScheme of ['light', 'dark']) {
+  test(`learner pages reflow at five widths and with enlarged text in ${colorScheme}`, async ({
+    page,
+    app,
+  }) => {
+    await page.emulateMedia({ colorScheme })
+    await page.goto('/courses')
+    await expect(python(page)).toBeVisible()
+    async function checkWidths() {
+      for (const width of [320, 375, 768, 1024, 1440]) {
+        await page.setViewportSize({ width, height: 900 })
+        const scroll = await page.evaluate(() => document.documentElement.scrollWidth)
+        expect(scroll, `page width at viewport ${width}`).toBeLessThanOrEqual(width)
+      }
+      await page.setViewportSize({ width: 320, height: 900 })
+      const enlarged = await page.addStyleTag({ content: 'html { font-size: 200%; }' })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+      await enlarged.evaluate((style) => style.remove())
     }
-    await page.setViewportSize({ width: 320, height: 900 })
-    const enlarged = await page.addStyleTag({ content: 'html { font-size: 200%; }' })
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
-    await enlarged.evaluate((style) => style.remove())
-  }
 
-  await checkWidths()
-  await python(page).click()
-  await expect(heading(page, 'Introduction to Python')).toBeVisible()
-  await checkWidths()
-  await page.goto(app.tracks.PYTHON.diagnostic)
-  await expect(field(page)).toBeVisible()
-  await checkWidths()
-  await sendAnswer(page, wrong, 201)
-  await expect(decision(page, 'Accept')).toBeVisible()
-  await checkWidths()
-  await page.setViewportSize({ width: 320, height: 900 })
-  await page.addStyleTag({ content: 'html { font-size: 200%; }' })
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
-  for (const action of ['Accept', 'Reject']) {
-    const button = decision(page, action)
-    await button.scrollIntoViewIfNeeded()
-    await expect(button).toBeInViewport()
-    const box = await button.boundingBox()
-    expect(box.width).toBeGreaterThanOrEqual(24)
-    expect(box.height).toBeGreaterThanOrEqual(24)
-  }
-})
+    await checkWidths()
+    await python(page).click()
+    await expect(heading(page, 'Introduction to Python')).toBeVisible()
+    await checkWidths()
+    await page.goto(app.tracks.PYTHON.diagnostic)
+    await expect(field(page)).toBeVisible()
+    await checkWidths()
+    await sendAnswer(page, wrong, 201)
+    await expect(decision(page, 'Accept')).toBeVisible()
+    await checkWidths()
+    await page.setViewportSize({ width: 320, height: 900 })
+    await page.addStyleTag({ content: 'html { font-size: 200%; }' })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+    for (const action of ['Accept', 'Reject']) {
+      const button = decision(page, action)
+      await button.scrollIntoViewIfNeeded()
+      await expect(button).toBeInViewport()
+      const box = await button.boundingBox()
+      expect(box.width).toBeGreaterThanOrEqual(24)
+      expect(box.height).toBeGreaterThanOrEqual(24)
+    }
+  })
+}
+
+for (const colorScheme of ['light', 'dark']) {
+  test(`enabled controls respect hover capability and motion preference in ${colorScheme}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme, reducedMotion: 'no-preference' })
+    await page.goto('/courses')
+    await expect(python(page)).toBeVisible()
+    const toggle = themeButton(page)
+    const canHover = await page.evaluate(() => matchMedia('(hover: hover)').matches)
+    await expect(toggle).toHaveCSS('transition-duration', canHover ? '0.12s' : '0s')
+    if (canHover) {
+      await expect(toggle).toHaveCSS('transition-property', 'box-shadow')
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await expect(toggle).toHaveCSS('transition-duration', '0s')
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Tab')
+    await expect(toggle).toBeFocused()
+    await expect(toggle).toHaveCSS('outline-style', 'solid')
+    await expect(toggle).toHaveCSS('outline-width', '3px')
+    await page.keyboard.press('Space')
+    await expect(toggle).toBeFocused()
+    await expect(toggle).toHaveAttribute('aria-pressed', String(colorScheme === 'light'))
+  })
+}
